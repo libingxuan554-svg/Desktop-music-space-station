@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.16)
 project(DesktopMusicStation_UI)
 
 # Set C++ Standard for deterministic behavior
@@ -14,7 +13,8 @@ include_directories(include)
 # Source files list
 set(SOURCES 
     src/main.cpp
-    # Add StandbyView.cpp and MusicView.cpp here as you create them
+    src/StandbyView.cpp
+    src/MusicView.cpp
 )
 
 add_executable(UI_Module ${SOURCES})
