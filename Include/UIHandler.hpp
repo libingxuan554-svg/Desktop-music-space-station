@@ -32,8 +32,8 @@ public:
     
     // Callbacks provided to UI to control the Media branch
     struct InteractionSignals {
-        void (*requestPlayPause)(); //Play/Pause Callback
-        void (*requestVolumeAdjust)(int level);  //Volume adjustment slider
+        std::function<void()> requestPlayPause; //Play/Pause Callback
+        std::function<void(int)> requestVolumeAdjust;  //Volume adjustment slider
     };
 };
 
