@@ -1,4 +1,4 @@
- #ifndef UIHANDLER_HPP
+#ifndef UIHANDLER_HPP
 #define UIHANDLER_HPP
 
 #include <vector>
