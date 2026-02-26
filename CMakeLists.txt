@@ -6,9 +6,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find GUI Dependencies (Qt6)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Threads REQUIRED)
 
 # Include directories to link UIHandler.hpp
-include_directories(include)
+include_directories(Include)
 
 # Source files list
 set(SOURCES 
@@ -20,4 +21,4 @@ set(SOURCES
 add_executable(UI_Module ${SOURCES})
 
 # Link libraries to the UI executable
-target_link_libraries(UI_Module PRIVATE Qt6::Widgets)
+target_link_libraries(UI_Module PRIVATE Qt6::Widgets Threads::Threads)
