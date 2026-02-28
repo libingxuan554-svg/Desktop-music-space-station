@@ -1,5 +1,5 @@
 # Desktop-music-space-station
-It allows users to select and switch songs using touch controls.It allows users to select and switch songs using touch controls.
+This project is a high-performance, C++-based embedded music player designed for the Raspberry Pi. It provides a touch-controlled interface  while strictly adhering to Real-Time System design principles.
 ##  Team 15
 * **BingXuan Li** (Team Leader) 
 * **Yang Zhang** (GUI Programmer)
