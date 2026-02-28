@@ -9,7 +9,7 @@
 
 /**
  * @brief Audio Engine class encapsulating the ALSA driver.
- * Responsible for Technical Core duties: hiding complexity and managing the RT thread.
+ * Handles hardware initialization, real-time thread management, and error recovery.
  */
 class AudioEngine {
 public:
@@ -17,10 +17,10 @@ public:
     ~AudioEngine();
 
     /**
-     * @brief Configures the ALSA hardware parameters .
-     * @param device Device string.
-     * @param rate Target sample rate .
-     * @return true if initialization is successful.
+     * @brief Configures ALSA hardware parameters.
+     * @param device Device name (default is "default").
+     * @param rate Desired sample rate (e.g., 44100).
+     * @return true if successfully initialized.
      */
     bool init(const char* device = "default", unsigned int rate = 44100);
 
@@ -30,31 +30,30 @@ public:
     void start();
 
     /**
-     * @brief Stops the playback worker thread and releases resources.
+     * @brief Stops the playback worker thread and closes the device.
      */
     void stop();
 
 private:
     /**
-     * @brief The core execution loop using Blocking I/O.
-     * Synchronized by the hardware buffer availability.
+     * @brief Core worker loop synchronized by blocking I/O.
      */
     void playbackWorker();
     
     /**
-     * @brief Recovers the PCM stream from runtime errors (e.g., Underruns).
-     * @param err ALSA error code.
+     * @brief Handles PCM errors such as underruns (XRUNs).
+     * @param err Negative error code from ALSA functions.
      */
     void recoverFromError(int err);
 
-    snd_pcm_t* pcmHandle = nullptr;     // Low-level ALSA handle
-    AudioSource* audioSource = nullptr; // Callback target
+    snd_pcm_t* pcmHandle = nullptr;     // Handle for the PCM device
+    AudioSource* audioSource = nullptr; // Callback target for audio processing
     
     std::thread workerThread;           // Background playback thread
-    std::atomic<bool> running{false};   // Atomic control for thread lifecycle
+    std::atomic<bool> running{false};   // Atomic flag to control thread execution
 
     unsigned int sampleRate = 44100;    
-    const snd_pcm_uframes_t periodSize = 512; // Standard chunk size for low-latency RT
+    const snd_pcm_uframes_t periodSize = 512; // Standard period size for low-latency RT
 };
 
 #endif
