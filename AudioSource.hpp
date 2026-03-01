@@ -1,0 +1,23 @@
+#ifndef AUDIO_SOURCE_HPP
+#define AUDIO_SOURCE_HPP
+
+#include <vector>
+#include <cstdint>
+
+/**
+ * @brief Interface for audio data providers.
+ * This allows the technical core to stay decoupled from the driver.
+ */
+class AudioSource {
+public:
+    virtual ~AudioSource() = default;
+
+    /**
+     * @brief Callback triggered when the engine requires new audio data.
+     * @param buffer Reference to the buffer to be filled with samples.
+     * @param numFrames Number of audio frames (stereo pairs) requested.
+     */
+    virtual void onProcessAudio(std::vector<float>& buffer, uint32_t numFrames) = 0;
+};
+
+#endif
