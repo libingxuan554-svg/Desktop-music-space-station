@@ -31,9 +31,8 @@ sudo apt-get update
 # Install ALSA for audio I/O
 sudo apt-get install libasound2-dev
 
-/*# Install Qt framework for GUI
-sudo apt-get install qtbase5-dev qt5-qmake
-*/
+/* # Install Qt framework for GUI */
+/* sudo apt-get install qtbase5-dev qt5-qmake //delete */
 
 # Install FFTW (or your chosen FFT library)
 sudo apt-get install libfftw3-dev
