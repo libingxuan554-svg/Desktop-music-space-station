@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(UI_Module)
 
-# Enable C++14 as per course requirements
+# Enable C++17 as per course requirements
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
