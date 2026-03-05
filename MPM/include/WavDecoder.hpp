@@ -3,15 +3,14 @@
 
 #include <string>
 #include <cstdint>
-// Note: We deliberately DO NOT include miniaudio.h here to keep our C++ clean!
-// This is a high-scoring architecture design.
+#include <cstddef>
 
-// A simple struct to hold our audio format info
+// Struct to hold extracted WAV header information
 struct AudioFormat {
     uint32_t sampleRate;
     uint16_t numChannels;
     uint16_t bitDepth;
-    uint32_t dataSize;
+    uint32_t dataSize; // Total bytes of raw audio data
 };
 
 class WavDecoder {
@@ -19,26 +18,23 @@ public:
     WavDecoder();
     ~WavDecoder();
 
-    // Core functions
+    // Core lifecycle functions
     bool openFile(const std::string& filepath);
     void closeFile();
+    
+    // Read raw audio bytes into the RingBuffer
     size_t readFrames(uint8_t* outputBuffer, size_t framesToRead);
     
-    // O(1) Deterministic Seek
+    // O(1) Time complexity seek using manual physical memory calculation
     bool seekToTime(double timeInSeconds);
     
-    // Get audio info
     AudioFormat getFormat() const;
 
 private:
+    int fileDescriptor;       // Linux POSIX file handle
     AudioFormat format;
-    
-    // We use a pointer to hide the complicated C struct (Pimpl idiom)
-    // Professor Bernd will love this encapsulation!
-    struct PrivateData;
-    PrivateData* pData;
-    
     bool isInitialized;
+    size_t dataStartPosition; // Where the actual music starts (usually byte 44)
 };
 
 #endif // WAV_DECODER_HPP
