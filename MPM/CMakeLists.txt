@@ -17,4 +17,5 @@ add_executable(MyDecoderTest
     srcWavDecoder.cpp
     srcRingBuffer.cpp
     srcMediaProgressManager.cpp
+
 )
