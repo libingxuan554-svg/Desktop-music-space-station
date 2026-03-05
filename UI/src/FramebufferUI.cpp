@@ -109,12 +109,8 @@ void FramebufferUI::clear(Color color) {
 void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
     std::lock_guard<std::mutex> lock(uiMutex);
     
-    // Background fill.
-    clear({15, 15, 30}); 
-    
-    // Temperature visualization: Map temperature to rectangle width.
-    int barLen = static_cast<int>(temp * 15);
-    drawRect(50, 100, std::min(barLen, (int)vinfo.xres - 100), 40, {255, 50, 0});
+    // Call the renderer to decouple the graphics logic on the screen
+    UIRenderer::renderTechBar(this, temp, 50, 150, vinfo.xres - 100);
 }
 
 
@@ -127,16 +123,8 @@ void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
 void FramebufferUI::refreshMusicAnimation(float intensity) {
     std::lock_guard<std::mutex> lock(uiMutex);
 
-    int centerX = vinfo.xres / 2;
-    int bottomY = vinfo.yres - 50;
-    int maxHeight = vinfo.yres - 150;
-    int currentHeight = static_cast<int>(intensity * maxHeight);
-
-    // 1. Partial clear: Overwrite the active area with background color.
-    drawRect(centerX - 40, 50, 80, maxHeight, {0, 0, 0});
-
-    // 2. Render new dynamic bar.
-    drawRect(centerX - 40, bottomY - currentHeight, 80, currentHeight, {0, 255, 128});
+    UIRenderer::renderMirrorEqualizer(this, intensity, vinfo.xres/2, vinfo.yres/2, vinfo.yres/2 - 50);
 }
 
+} // namespace UI
 } // namespace UI
