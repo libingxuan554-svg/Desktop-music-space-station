@@ -23,6 +23,15 @@ target_link_libraries(AudioEngine PRIVATE ALSA::ALSA pthread)
 target_include_directories(AudioEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #########################################################################
-# Link to the UI section
-add_subdirectory(UI) 
-target_link_libraries(AudioEngine PRIVATE UI_Module)
+# 1. 注册你的 MPM 模块文件夹
+add_subdirectory(MPM)
+
+# 2. 注册 UI 模块文件夹 (保持原样)
+add_subdirectory(UI)
+
+# 3. 终极缝合！把你的 MPM_Module 和 UI_Module 像装配零件一样接到主引擎上
+target_link_libraries(AudioEngine 
+    PRIVATE 
+    MPM_Module 
+    UI_Module
+)
