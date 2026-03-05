@@ -1,0 +1,20 @@
+# 1. Require a minimum CMake version
+cmake_minimum_required(VERSION 3.10)
+
+# 2. Name your test project
+project(DecoderTest)
+
+# 3. Use C++11 standard (required for stdatomic and modern features)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# 4. Tell the compiler where to find your .hpp files
+include_directories(include)
+
+# 5. Tell the compiler which .cpp files to build into the executable
+add_executable(MyDecoderTest
+    main.cpp
+    srcWavDecoder.cpp
+    srcRingBuffer.cpp
+    srcMediaProgressManager.cpp
+)
