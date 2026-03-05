@@ -1,4 +1,4 @@
- #ifndef FRAMEBUFFER_UI_HPP
+#ifndef FRAMEBUFFER_UI_HPP
 #define FRAMEBUFFER_UI_HPP
 
 #include <linux/fb.h>
@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <mutex>
+#include "UIRenderer.hpp"  //Include the renderer header file
 
 /**
  * @namespace UI
@@ -66,17 +67,9 @@ public:
      * @param intensity Rhythm intensity normalized to [0.0, 1.0].
      */
     void refreshMusicAnimation(float intensity); 
-
-
-    /**
-     * @brief Fills the entire buffer with a specific color.
-     * @param color Target fill color.
-     */
-    void clear(Color color = {0, 0, 0});
-
-private:
-
-    /**
+	
+	
+	/**
      * @brief Renders a filled rectangle at specified coordinates.
      * @param x X-coordinate (top-left).
      * @param y Y-coordinate (top-left).
@@ -86,6 +79,18 @@ private:
      */
     void drawRect(int x, int y, int w, int h, Color color);
 
+
+    /**
+     * @brief Fills the entire buffer with a specific color.
+     * @param color Target fill color.
+     */
+    void clear(Color color = {0, 0, 0});
+	
+	// Screen information interface for UIRenderer to perform resolution adaptive calculation
+    int getWidth() const { return vinfo.xres; }
+    int getHeight() const { return vinfo.yres; }
+
+private:
 
     /**
      * @brief Renders a single pixel.

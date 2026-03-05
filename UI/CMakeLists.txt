@@ -5,7 +5,7 @@ project(UI_Module)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Enable all compiler warnings to ensure high code quality (Grade A requirement)
+# Enable all compiler warnings to ensure high code quality 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pthread")
 
 # Include the 'include' directory for header files
@@ -13,9 +13,12 @@ include_directories(include)
 
 # ---------------------------------------------------------------------------
 # TARGET 1: UI Static Library
-# This encapsulates the Framebuffer implementation so the Main Lead can link it.
+# It contains the low-level driver FramebufferUI and high-level renderer UIRenderer
 # ---------------------------------------------------------------------------
-add_library(UI_Module STATIC src/FramebufferUI.cpp)
+add_library(UI_Module STATIC 
+	src/FramebufferUI.cpp
+	src/UIRenderer.cpp
+)
 
 # ---------------------------------------------------------------------------
 # TARGET 2: Unit Tests (TDD - Test Driven Development)
@@ -31,4 +34,5 @@ target_link_libraries(unit_tests UI_Module)
 # To use this module in the root directory, add: "add_subdirectory(UI)"
 # and "target_link_libraries(MainProjectName PUBLIC UI_Module)"
 # ---------------------------------------------------------------------------
-message(STATUS "UI Module: Build configuration complete. TDD tests enabled.")
+message(STATUS "UI Module: Decoupled Architecture configured.")
+message(STATUS "UI Module: TDD unit tests enabled.")
