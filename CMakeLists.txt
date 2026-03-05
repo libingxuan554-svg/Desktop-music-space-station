@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(music_player
     src/main.cpp
     src/Player.cpp
-    src/UI.cpp
     src/PIR.cpp
     src/LED.cpp
 )
