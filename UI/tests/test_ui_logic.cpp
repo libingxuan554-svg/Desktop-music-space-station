@@ -25,7 +25,7 @@ int calculateBarHeight(float intensity, int maxHeight) {
 void testStandardMapping() {
     std::cout << "Testing: Audio Intensity to Pixel Mapping..." << std::endl;
     int screenHeight = 480;
-    int maxBarHeight = screenHeight / 2 - 50; // 对应 UIRenderer 中的计算逻辑
+    int maxBarHeight = screenHeight / 2 - 50; // Corresponding to the calculation logic in UIRenderer
     
     // 50% intensity should map to maxBarHeight / 2
     assert(calculateBarHeight(0.5f, maxBarHeight) == maxBarHeight / 2);
@@ -68,4 +68,5 @@ int main() {
     }
 
     return 0;
+
 }
