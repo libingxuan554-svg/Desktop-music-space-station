@@ -1,4 +1,5 @@
 #include "FramebufferUI.hpp"
+#include "InteractionManager.hpp"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
@@ -109,8 +110,11 @@ void FramebufferUI::clear(Color color) {
 void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
     std::lock_guard<std::mutex> lock(uiMutex);
     
-    // Call the renderer to decouple the graphics logic on the screen
-    UIRenderer::renderTechBar(this, temp, 50, 150, vinfo.xres - 100);
+    // 只有在待机页面时才渲染仪表盘
+    if (InteractionManager::currentPage == UIPage::STANDBY) {
+        UIRenderer::renderTechBar(this, temp, 50, 150, vinfo.xres - 100);
+        // 此处可扩展绘制日历/天气文字
+    }
 }
 
 
@@ -122,9 +126,25 @@ void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
  */
 void FramebufferUI::refreshMusicAnimation(float intensity) {
     std::lock_guard<std::mutex> lock(uiMutex);
-
-    UIRenderer::renderMirrorEqualizer(this, intensity, vinfo.xres/2, vinfo.yres/2, vinfo.yres/2 - 50);
+	
+	// 清屏避免残影
+    this->clear({5, 5, 15});
+    
+    auto layout = InteractionManager::getActiveLayout();
+	
+	//将 intensity 传入渲染器
+    UIRenderer::renderButtons(this, layout, intensity);
+	
+    if (InteractionManager::currentPage == UIPage::PLAYER) {
+        // 调用原有的镜像音柱渲染
+        UIRenderer::renderMirrorEqualizer(this, intensity, vinfo.xres/2, vinfo.yres/2, 150);
+		// [新增] 叠加渲染播放器控制按钮
+        UIRenderer::renderButtons(this, layout);
+    } 
+	else if (InteractionManager::currentPage == UIPage::MUSIC_LIST) {
+        // 渲染列表界面
+        UIRenderer::renderButtons(this, layout); 
+    }
 }
 
-} // namespace UI
-} // namespace UI
+}// namespace UI 
