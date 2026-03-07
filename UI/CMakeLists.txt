@@ -18,7 +18,10 @@ include_directories(include)
 add_library(UI_Module STATIC 
 	src/FramebufferUI.cpp
 	src/UIRenderer.cpp
+	src/InteractionManager.cpp  # 新增
+    src/TouchHandler.cpp        # 新增
 )
+target_link_libraries(UI_Module PUBLIC pthread)
 
 # ---------------------------------------------------------------------------
 # TARGET 2: Unit Tests (TDD - Test Driven Development)
@@ -27,7 +30,7 @@ add_library(UI_Module STATIC
 add_executable(unit_tests tests/test_ui_logic.cpp)
 
 # Link the test executable with our UI library
-target_link_libraries(unit_tests UI_Module)
+target_link_libraries(unit_tests UI_Module pthread)
 
 # ---------------------------------------------------------------------------
 # Integration Note for Main Lead:
