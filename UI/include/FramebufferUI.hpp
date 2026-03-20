@@ -7,6 +7,7 @@
 #include <string>
 #include <mutex>
 #include "UIRenderer.hpp"  //Include the renderer header file
+#include "SystemInterfaces.hpp"
 
 /**
  * @namespace UI
@@ -58,7 +59,7 @@ public:
      * @param temp Current temperature in Celsius.
      * @param timeStr Formatted timestamp.
      */
-    void refreshStandby(float temp, const std::string& timeStr);
+    void refreshStandby(const System::EnvironmentStatus& env);
 
 
     /**
@@ -66,7 +67,7 @@ public:
      * @note High-frequency call; optimized via partial screen updates.
      * @param intensity Rhythm intensity normalized to [0.0, 1.0].
      */
-    void refreshMusicAnimation(float intensity); 
+    void refreshMusicAnimation(const System::AudioVisualData& visual, const System::PlaybackStatus& status); 
 	
 	
 	/**
