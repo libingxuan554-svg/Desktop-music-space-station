@@ -24,5 +24,9 @@ target_include_directories(AudioEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #########################################################################
 # Link to the UI section
-add_subdirectory(UI) 
-target_link_libraries(AudioEngine PRIVATE UI_Module)
+
+add_subdirectory(MPM)
+
+# Link to the UI section
+add_subdirectory(UI)
+target_link_libraries(AudioEngine PRIVATE UI_Module MPM_Module) # 顺手把你连上去
