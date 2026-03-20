@@ -28,12 +28,16 @@ namespace UI {
 
     void TouchHandler::eventLoop() {
         struct input_event ev;
+		// 树莓派 7 寸屏典型坐标范围校准 (0-4095 -> 800x480)
+		const float scaleX = 800.0f / 4095.0f;
+		const float scaleY = 480.0f / 4095.0f;
+	
         while (running) {
             if (read(touchFd, &ev, sizeof(ev)) > 0) {
 				// 1. 处理坐标更新 (EV_ABS)
                 if (ev.type == EV_ABS) {
-                    if (ev.code == ABS_X) currentX = ev.value;
-                    if (ev.code == ABS_Y) currentY = ev.value;
+                    if (ev.code == ABS_X) currentX = static_cast<int>(ev.value * scaleX);
+                if (ev.code == ABS_Y) currentY = static_cast<int>(ev.value * scaleY);
                 } 
                 
                 // 2. 处理按键事件 (EV_KEY)
@@ -46,7 +50,7 @@ namespace UI {
                         // [新增逻辑] 手指抬起：计算垂直位移
                         int deltaY = currentY - startY;
 
-                        if (std::abs(deltaY) > 30) { 
+                        if (std::abs(deltaY) > 40) { 
                             // 情况 A：位移较大，识别为滑动
                             // 调用 InteractionManager 的滑动接口，实现歌单滚动
                             InteractionManager::handleScroll(deltaY);
