@@ -107,13 +107,13 @@ void FramebufferUI::clear(Color color) {
  * 1. Uses std::lock_guard on uiMutex to prevent data races between hardware telemetry threads and audio callback threads.
  * 2. Linearly maps temperature values to bar length for visual feedback.
  */
-void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
+void FramebufferUI::refreshStandby(const System::EnvironmentStatus& env) {
     std::lock_guard<std::mutex> lock(uiMutex);
     
     // 只有在待机页面时才渲染仪表盘
     if (InteractionManager::currentPage == UIPage::STANDBY) {
-        UIRenderer::renderTechBar(this, temp, 50, 150, vinfo.xres - 100);
-        // 此处可扩展绘制日历/天气文字
+        // 调用渲染器，传入协议定义的温度值
+        UIRenderer::renderTechBar(this, env.temperature, 50, 150, vinfo.xres - 100);
     }
 }
 
@@ -124,16 +124,19 @@ void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
  * 2. "Dirty Rectangle" approach: Clears only the previous bar area with the background color before rendering the new state based on intensity.
  * 3. Significantly reduces CPU load to maintain RT-deadlines.
  */
-void FramebufferUI::refreshMusicAnimation(float intensity) {
+void FramebufferUI::refreshMusicAnimation(const System::AudioVisualData& visual, const System::PlaybackStatus& status) {
     std::lock_guard<std::mutex> lock(uiMutex);
+    
+    // 更新缓存以便 UI 逻辑层访问
+    InteractionManager::currentStatus = status;
 	
 	// 清屏避免残影
     this->clear({5, 5, 15});
-    
     auto layout = InteractionManager::getActiveLayout();
 	
-	//将 intensity 传入渲染器
-    UIRenderer::renderButtons(this, layout, intensity);
+	// 使用协议定义的视觉强度进行渲染
+    UIRenderer::renderButtons(this, layout, visual.overallIntensity);
+}
 	
     if (InteractionManager::currentPage == UIPage::PLAYER) {
         // 调用原有的镜像音柱渲染

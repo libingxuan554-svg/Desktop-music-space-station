@@ -23,8 +23,16 @@ To ensure code maintainability and scalability, I have adopted a Decoupled Strat
 * 'tests/test_ui_logic.cpp: Unit tests for rendering math and boundary checks.
 * 'CMakeLists.txt: Automated build script for both the library and unit tests.
 
+## 5.Protocol Integration
+This module interacts with other modules through `SystemInterfaces.hpp`:
+1. **Data Reception **: It caches audio and environmental data through `currentStatus` and `currentEnv`.
+2. **Command Transmission **: Through the `CommandEmitter` callback function, it converts UI click events into `ControlCommand` instructions (such as `PLAY_PAUSE`), and sends them to the FastDDS module.
+
 ## 5. How to Compile and Run 
-Compilation Module ```bash
+Compilation Module 
+```bash
 mkdir build && cd build
 cmake ..
 make
+# 运行单元测试验证逻辑
+./unit_tests
