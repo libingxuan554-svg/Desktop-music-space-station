@@ -3,31 +3,45 @@
 
 MediaProgressManager::MediaProgressManager(WavDecoder* dec, RingBuffer* buf) 
     : decoder(dec), ringBuffer(buf) {
-    std::cout << "[ProgressManager] Initialized and connected to Decoder & Buffer." << std::endl;
+    std::cout << "[ProgressManager] Initialized and mapped to System Interfaces." << std::endl;
 }
 
 // ---------------------------------------------------------
-// THIS IS THE COMBO MOVE FOR PROGRESS BAR DRAGGING
+// 处理 UI 传来的标准化指令
 // ---------------------------------------------------------
-bool MediaProgressManager::handleUserSeek(double targetTimeSeconds) {
-    if (!decoder || !ringBuffer) {
-        std::cerr << "[ProgressManager] ERROR: Missing decoder or buffer!" << std::endl;
-        return false;
+bool MediaProgressManager::processCommand(const System::ControlCommand& cmd) {
+    if (!decoder || !ringBuffer) return false;
+
+    // 我们只拦截跟“进度”相关的指令，其他的放行让 AudioEngine 处理
+    switch (cmd.type) {
+        case System::CommandType::SEEK_FORWARD:
+        case System::CommandType::SEEK_BACKWARD: {
+            // 队友定义了用 intValue 或者 floatValue 传参数。
+            // 这里假设 UI 会把目标秒数塞进 intValue 里传过来
+            double targetTimeSeconds = static_cast<double>(cmd.intValue);
+            
+            std::cout << "[ProgressManager] Received SEEK Command: Jump to " << targetTimeSeconds << "s" << std::endl;
+            
+            if (decoder->seekToTime(targetTimeSeconds)) {
+                ringBuffer->flush(); // 清空旧水池！
+                return true;
+            }
+            return false;
+        }
+        
+        default:
+            // 像 PLAY_PAUSE, VOLUME_UP 等指令是音频引擎控制的，我们不管
+            return false; 
     }
+}
 
-    std::cout << "[ProgressManager] UI requested jump to: " << targetTimeSeconds << "s" << std::endl;
+// ---------------------------------------------------------
+// 组装数据给 UI：获取当前播放状态
+// ---------------------------------------------------------
+void MediaProgressManager::injectTimeData(System::PlaybackStatus& status) {
+    if (!decoder) return;
 
-    // Step 1: Tell the decoder to instantly jump to the new mathematical position
-    bool seekSuccess = decoder->seekToTime(targetTimeSeconds);
-    
-    if (seekSuccess) {
-        // Step 2: Flush the ring buffer! 
-        // If we don't do this, the user will hear the old music in the pool first.
-        ringBuffer->flush();
-        std::cout << "[ProgressManager] Seek successful, old buffer water flushed!" << std::endl;
-        return true;
-    }
-
-    std::cerr << "[ProgressManager] Seek failed at decoder level." << std::endl;
-    return false;
+    // 直接调用底层引擎，获取精准秒数，塞进队友要求的变量名里！
+    status.currentPosition = decoder->getCurrentPosition();
+    status.totalDuration   = decoder->getTotalDuration();
 }
