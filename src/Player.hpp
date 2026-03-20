@@ -1,13 +1,14 @@
 #pragma once
-#include <atomic>
 #include <functional>
-#include <mutex>
 #include <string>
 #include <vector>
 
 class Player {
 public:
     using Callback = std::function<void()>;
+
+    Player();
+    ~Player();
 
     bool init();
     void shutdown();
@@ -24,7 +25,7 @@ public:
     void prev();
     void seekSeconds(double sec);
 
-    void setVolume(float v01);       // 0..1
+    void setVolume(float v01);   // 0..1
     float volume() const;
 
     bool isPlaying() const;
@@ -33,15 +34,16 @@ public:
     double positionSeconds() const;
     double durationSeconds() const;
 
-    // For LEDs: Current output "energy" estimate (0..1)
+    // For LED/UI
     float level01() const;
 
-    // UI refresh callbacks (track switching/state changes)
-    void setOnStateChanged(Callback cb);
+    // 主线程/UI线程周期调用
+    void update();
 
+    void setOnStateChanged(Callback cb);
     std::string currentTitle() const;
 
 private:
     struct Impl;
-    Impl* impl_{nullptr};
+    Impl* impl_;
 };
