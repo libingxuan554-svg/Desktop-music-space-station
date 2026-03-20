@@ -41,3 +41,7 @@ endif()
 # ---------------------------------------------------------------------------
 message(STATUS "UI Module: Plug-and-Play architecture ready.")
 message(STATUS "UI Module: Adheres to SystemInterfaces.hpp protocol.")
+
+# 添加实机测试可执行文件
+add_executable(demo_run main.cpp)
+target_link_libraries(demo_run UI_Module pthread)
