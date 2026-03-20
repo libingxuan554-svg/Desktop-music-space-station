@@ -121,3 +121,30 @@ bool WavDecoder::seekToTime(double timeInSeconds) {
 AudioFormat WavDecoder::getFormat() const {
     return format;
 }
+// ---------------------------------------------------------
+// 对接团队接口：获取总时长 (秒)
+// ---------------------------------------------------------
+int32_t WavDecoder::getTotalDuration() const {
+    if (!isInitialized || format.sampleRate == 0) return 0;
+    
+    // 总时长 = 总音频数据字节数 / 每秒消耗的字节数
+    size_t bytesPerSecond = format.sampleRate * format.numChannels * (format.bitDepth / 8);
+    return static_cast<int32_t>(format.dataSize / bytesPerSecond);
+}
+
+// ---------------------------------------------------------
+// 对接团队接口：获取当前播放进度 (秒)
+// ---------------------------------------------------------
+int32_t WavDecoder::getCurrentPosition() const {
+    if (!isInitialized || fileDescriptor < 0) return 0;
+    
+    // 瞬间获取当前物理磁头在文件中的字节位置
+    off_t currentOffset = lseek(fileDescriptor, 0, SEEK_CUR);
+    if (currentOffset <= static_cast<off_t>(dataStartPosition)) return 0;
+    
+    // 当前秒数 = 已经播放的字节数 / 每秒消耗的字节数
+    size_t bytesPerSecond = format.sampleRate * format.numChannels * (format.bitDepth / 8);
+    size_t playedBytes = currentOffset - dataStartPosition;
+    
+    return static_cast<int32_t>(playedBytes / bytesPerSecond);
+}

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required
 project(AudioEngineModule)
 
 # C++17 for better atomic and thread support
@@ -21,12 +21,3 @@ add_library(AudioEngine
 # Link against ALSA and Pthreads
 target_link_libraries(AudioEngine PRIVATE ALSA::ALSA pthread)
 target_include_directories(AudioEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-#########################################################################
-# Link to the UI section
-
-add_subdirectory(MPM)
-
-# Link to the UI section
-add_subdirectory(UI)
-target_link_libraries(AudioEngine PRIVATE UI_Module MPM_Module) # 顺手把你连上去

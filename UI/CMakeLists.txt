@@ -18,21 +18,26 @@ include_directories(include)
 add_library(UI_Module STATIC 
 	src/FramebufferUI.cpp
 	src/UIRenderer.cpp
+	src/InteractionManager.cpp  # 新增
+                  src/TouchHandler.cpp        # 新增
 )
+target_link_libraries(UI_Module PUBLIC pthread)
 
 # ---------------------------------------------------------------------------
 # TARGET 2: Unit Tests (TDD - Test Driven Development)
 # This allows us to verify logic without needing the actual hardware/display.
 # ---------------------------------------------------------------------------
-add_executable(unit_tests tests/test_ui_logic.cpp)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_ui_logic.cpp")
+	add_executable(unit_tests tests/test_ui_logic.cpp)
 
 # Link the test executable with our UI library
-target_link_libraries(unit_tests UI_Module)
+	target_link_libraries(unit_tests UI_Module pthread)
+endif()
 
 # ---------------------------------------------------------------------------
 # Integration Note for Main Lead:
 # To use this module in the root directory, add: "add_subdirectory(UI)"
 # and "target_link_libraries(MainProjectName PUBLIC UI_Module)"
 # ---------------------------------------------------------------------------
-message(STATUS "UI Module: Decoupled Architecture configured.")
-message(STATUS "UI Module: TDD unit tests enabled.")
+message(STATUS "UI Module: Plug-and-Play architecture ready.")
+message(STATUS "UI Module: Adheres to SystemInterfaces.hpp protocol.")

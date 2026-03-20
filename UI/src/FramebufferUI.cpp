@@ -1,4 +1,5 @@
 #include "FramebufferUI.hpp"
+#include "InteractionManager.hpp"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
@@ -106,11 +107,14 @@ void FramebufferUI::clear(Color color) {
  * 1. Uses std::lock_guard on uiMutex to prevent data races between hardware telemetry threads and audio callback threads.
  * 2. Linearly maps temperature values to bar length for visual feedback.
  */
-void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
+void FramebufferUI::refreshStandby(const System::EnvironmentStatus& env) {
     std::lock_guard<std::mutex> lock(uiMutex);
     
-    // Call the renderer to decouple the graphics logic on the screen
-    UIRenderer::renderTechBar(this, temp, 50, 150, vinfo.xres - 100);
+    // 只有在待机页面时才渲染仪表盘
+    if (InteractionManager::currentPage == UIPage::STANDBY) {
+        // 调用渲染器，传入协议定义的温度值
+        UIRenderer::renderTechBar(this, env.temperature, 50, 150, vinfo.xres - 100);
+    }
 }
 
 
@@ -120,11 +124,30 @@ void FramebufferUI::refreshStandby(float temp, const std::string& timeStr) {
  * 2. "Dirty Rectangle" approach: Clears only the previous bar area with the background color before rendering the new state based on intensity.
  * 3. Significantly reduces CPU load to maintain RT-deadlines.
  */
-void FramebufferUI::refreshMusicAnimation(float intensity) {
+void FramebufferUI::refreshMusicAnimation(const System::AudioVisualData& visual, const System::PlaybackStatus& status) {
     std::lock_guard<std::mutex> lock(uiMutex);
-
-    UIRenderer::renderMirrorEqualizer(this, intensity, vinfo.xres/2, vinfo.yres/2, vinfo.yres/2 - 50);
+    
+    // 更新缓存以便 UI 逻辑层访问
+    InteractionManager::currentStatus = status;
+	
+	// 清屏避免残影
+    this->clear({5, 5, 15});
+    auto layout = InteractionManager::getActiveLayout();
+	
+	// 使用协议定义的视觉强度进行渲染
+    UIRenderer::renderButtons(this, layout, visual.overallIntensity);
+}
+	
+    if (InteractionManager::currentPage == UIPage::PLAYER) {
+        // 调用原有的镜像音柱渲染
+        UIRenderer::renderMirrorEqualizer(this, intensity, vinfo.xres/2, vinfo.yres/2, 150);
+		// [新增] 叠加渲染播放器控制按钮
+        UIRenderer::renderButtons(this, layout);
+    } 
+	else if (InteractionManager::currentPage == UIPage::MUSIC_LIST) {
+        // 渲染列表界面
+        UIRenderer::renderButtons(this, layout); 
+    }
 }
 
-} // namespace UI
-} // namespace UI
+}// namespace UI 

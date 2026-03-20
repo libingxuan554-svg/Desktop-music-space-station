@@ -29,7 +29,9 @@ public:
     bool seekToTime(double timeInSeconds);
     
     AudioFormat getFormat() const;
-
+// --- 新增：对接团队 PlaybackStatus 接口 ---
+    int32_t getTotalDuration() const;
+    int32_t getCurrentPosition() const;
 private:
     int fileDescriptor;       // Linux POSIX file handle
     AudioFormat format;
