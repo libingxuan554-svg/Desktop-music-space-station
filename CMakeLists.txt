@@ -13,9 +13,9 @@ find_package(ALSA REQUIRED)
 
 # Define the library for the project
 add_library(AudioEngine 
-    AudioEngine.cpp 
-    AudioEngine.hpp 
-    AudioSource.hpp
+    audio-engine/AudioEngine.cpp 
+    audio-engine/AudioEngine.hpp 
+    audio-engine/AudioSource.hpp
 )
 
 # Link against ALSA and Pthreads
