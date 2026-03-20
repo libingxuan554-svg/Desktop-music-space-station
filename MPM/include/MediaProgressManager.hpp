@@ -3,7 +3,7 @@
 
 #include "WavDecoder.hpp"
 #include "RingBuffer.hpp"
-#include "SystemInterfaces.hpp" // 引入队友的接口标准！
+#include "../../SystemInterfaces.hpp"
 
 class MediaProgressManager {
 public:
