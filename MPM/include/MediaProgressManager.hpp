@@ -3,16 +3,18 @@
 
 #include "WavDecoder.hpp"
 #include "RingBuffer.hpp"
+#include "SystemInterfaces.hpp" // 引入队友的接口标准！
 
-// The "Control Center" connecting the UI Progress Bar to the Audio Engine
 class MediaProgressManager {
 public:
-    // Pass the pointers of your decoder and buffer to this manager
     MediaProgressManager(WavDecoder* dec, RingBuffer* buf);
     ~MediaProgressManager() = default;
 
-    // Called by the UI thread when the user drags the progress bar
-    bool handleUserSeek(double targetTimeSeconds);
+    // 1. 接收 UI 的指令 (替代原来的 handleUserSeek)
+    bool processCommand(const System::ControlCommand& cmd);
+
+    // 2. 将底层的进度数据注入到队友的 UI 状态包里
+    void injectTimeData(System::PlaybackStatus& status);
 
 private:
     WavDecoder* decoder;
