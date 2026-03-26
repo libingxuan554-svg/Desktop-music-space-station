@@ -1,4 +1,4 @@
-#include "AudioEngine.hpp"
+#include "../include/AudioEngine.hpp"
 #include <iostream>
 #include <pthread.h>
 #include <sched.h>
