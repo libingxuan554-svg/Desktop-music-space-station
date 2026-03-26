@@ -12,9 +12,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -O3")
 find_package(ALSA REQUIRED)
 
 # Define the library for the project
-add_library(AudioEngine 
-    audio-engine/AudioEngine.cpp 
-    audio-engine/AudioEngine.hpp 
+add_library(AudioEngine
+    audio-engine/AudioEngine.cpp
+    audio-engine/AudioEngine.hpp
     audio-engine/AudioSource.hpp
 )
 
@@ -23,10 +23,17 @@ target_link_libraries(AudioEngine PRIVATE ALSA::ALSA pthread)
 target_include_directories(AudioEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #########################################################################
-# Link to the UI section
+# Submodules
 
 add_subdirectory(MPM)
-
-# Link to the UI section
 add_subdirectory(UI)
-target_link_libraries(AudioEngine PRIVATE UI_Module MPM_Module) # 顺手把你连上去
+add_subdirectory(hardware)
+
+#########################################################################
+# Link submodules into AudioEngine
+
+target_link_libraries(AudioEngine PRIVATE
+    UI_Module
+    MPM_Module
+    Hardware_Module
+)
