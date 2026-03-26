@@ -1,63 +1,57 @@
+#include "../include/WavDecoder.hpp"
+#include <iostream>
+#include <string>
+#include <fcntl.h>    // For Linux OS-level file open()
+#include <unistd.h>   // For Linux OS-level read(), close(), lseek()
+
+WavDecoder::WavDecoder() : fileDescriptor(-1), isInitialized(false), dataStartPosition(44) {
+    std::cout << "[WavDecoder] Pure C++ OS-Level Decoder Created." << std::endl;
+}
+
+WavDecoder::~WavDecoder() {
+    // RAII principle: automatically close file to prevent memory leaks
+    closeFile();
+    std::cout << "[WavDecoder] Decoder Destroyed safely." << std::endl;
+}
+
 bool WavDecoder::openFile(const std::string& filepath) {
     if (isInitialized) {
         closeFile();
     }
 
+    // 1. Use low-level POSIX API for maximum I/O performance
     fileDescriptor = open(filepath.c_str(), O_RDONLY);
     if (fileDescriptor < 0) {
         std::cerr << "[WavDecoder] ERROR: Could not open file: " << filepath << std::endl;
         return false;
     }
 
-    // 1. 读取基础头部 (只读前 36 字节，到 'data' 之前)
+    // 2. 读取基础头部 (只读前 36 字节，包含 RIFF, WAVE 和 16字节的 fmt 块)
     uint8_t header[36];
     if (read(fileDescriptor, header, 36) != 36) {
-        std::cerr << "[WavDecoder] ERROR: File is too small." << std::endl;
+        std::cerr << "[WavDecoder] ERROR: File is too small or invalid." << std::endl;
         closeFile();
         return false;
     }
 
-    // 2. 解析基础格式信息
+    // 3. 解析基础格式信息 (从 fmt 块提取，Little-Endian 移位)
     format.numChannels = header[22] | (header[23] << 8);
     format.sampleRate  = header[24] | (header[25] << 8) | (header[26] << 16) | (header[27] << 24);
     format.bitDepth    = header[34] | (header[35] << 8);
 
-    // 3. 智能雷达：扫描寻找 "data" 块 (跳过所有垃圾信息)
-    char chunkId[5] = {0}; // 用来装 4 个字母的标记
+    // 4. 智能雷达：扫描寻找 "data" 块 (自动跳过 LIST 等非标准干扰信息)
+    char chunkId[5] = {0}; 
     uint32_t chunkSize = 0;
     bool foundData = false;
 
     while (true) {
-        // 读取 4 个字母的名字 (比如 "fmt ", "LIST", "data")
+        // 读取 4 个字母的标识符 (如 "data", "LIST")
         if (read(fileDescriptor, chunkId, 4) != 4) break; 
         
-        // 读取这个块的大小 (4 字节)
+        // 读取这个块的字节大小
         uint8_t sizeBuffer[4];
         if (read(fileDescriptor, sizeBuffer, 4) != 4) break;
         chunkSize = sizeBuffer[0] | (sizeBuffer[1] << 8) | (sizeBuffer[2] << 16) | (sizeBuffer[3] << 24);
 
-        // 如果找到了 "data" 块！
         if (std::string(chunkId, 4) == "data") {
-            format.dataSize = chunkSize; // 拿到真正的音频大小！
-            dataStartPosition = lseek(fileDescriptor, 0, SEEK_CUR); // 记录磁头当前的精确物理位置！
-            foundData = true;
-            break; // 停止扫描
-        } else {
-            // 如果是垃圾块 (比如 LIST)，直接命令 OS 让磁头跳过这个块的大小
-            lseek(fileDescriptor, chunkSize, SEEK_CUR);
-        }
-    }
-
-    if (!foundData) {
-        std::cerr << "[WavDecoder] ERROR: 找不到 data 块！这不是一个标准的 WAV 文件。" << std::endl;
-        closeFile();
-        return false;
-    }
-
-    isInitialized = true;
-    std::cout << "[WavDecoder] Success! SR: " << format.sampleRate 
-              << "Hz, CH: " << format.numChannels 
-              << ", Depth: " << format.bitDepth << "bit." 
-              << " | DataSize: " << format.dataSize << " bytes" << std::endl;
-    return true;
-}
+            format.dataSize = chunkSize;
