@@ -62,11 +62,11 @@ bool HardwareController::initLedStrip() {
     return true;
 }
 
-void HardwareController::updateLighting(float peak) {
+void HardwareController::updateLighting(const std::vector<float>& spectrum) {
     std::lock_guard<std::mutex> lock(m_hardwareMutex);
 
     if (!m_ledStripInitialized) return;
-    m_ledStrip.updateFromPeak(peak);
+    m_ledStrip.updateFromSpectrum(spectrum);
 }
 
 void HardwareController::clearLighting() {
