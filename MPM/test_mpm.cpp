@@ -1,6 +1,6 @@
 #include <iostream>
+#include <string>
 #include <thread>
-#include <chrono>
 #include "../SystemInterfaces.hpp"
 #include "include/WavDecoder.hpp"
 #include "include/RingBuffer.hpp"
@@ -8,51 +8,71 @@
 #include "include/AudioEngine.hpp"
 
 int main() {
-    std::cout << "🚀 桌面音乐空间站 - 底层引擎全链路点火测试 🚀\n" << std::endl;
+    std::cout << "==========================================" << std::endl;
+    std::cout << "🚀 桌面音乐空间站 - 交互式终端控制台 🚀" << std::endl;
+    std::cout << "==========================================" << std::endl;
 
-    // 1. 实例化你的基础设施
+    // 1. 组装所有基础设施
     WavDecoder decoder;
-    RingBuffer buffer(8192); // 水池开大一点，8KB
-
-    // 2. 实例化桥梁控制器，把你的设施交给他
+    RingBuffer buffer(8192);
     MusicController controller(&decoder, &buffer);
-
-    // 3. 实例化队友的硬件引擎，把桥梁插进去
     AudioEngine engine(&controller);
 
-    // 4. 启动 ALSA 硬件驱动 (此时扬声器被接管，准备随时发声)
-    if (!engine.init("default", 44100)) { // 注意：test.wav 如果是 44100Hz 最好，其他采样率会被重采样
+    // 2. 点火启动底层硬件引擎 (它会在后台默默待命)
+    if (!engine.init("default", 44100)) {
         std::cerr << "❌ 硬件引擎初始化失败！" << std::endl;
         return -1;
     }
-    engine.start(); // 启动抽水机线程！
+    engine.start();
 
-    // 5. 设置歌单并发送播放指令！
-    std::vector<std::string> playlist = {"test.wav"}; // 确保 build 目录下有这个文件
+    // 3. 设置初始歌单 (确保你的 build 目录里有这个文件)
+    std::vector<std::string> playlist = {"test.wav"}; 
     controller.setPlaylist(playlist);
 
-    System::ControlCommand playCmd;
-    playCmd.type = System::CommandType::PLAY_PAUSE;
-    
-    std::cout << "\n▶️ 发送播放指令..." << std::endl;
-    controller.processCommand(playCmd); // 音乐应该在这一刻响起！
+    std::cout << "✅ 底层引擎已就绪！\n" << std::endl;
+    std::cout << "支持的指令: " << std::endl;
+    std::cout << "  [p]  - 播放 / 暂停" << std::endl;
+    std::cout << "  [+]  - 音量加" << std::endl;
+    std::cout << "  [-]  - 音量减" << std::endl;
+    std::cout << "  [n]  - 下一首" << std::endl;
+    std::cout << "  [q]  - 退出程序" << std::endl;
+    std::cout << "------------------------------------------" << std::endl;
 
-    // 6. 让主线程存活 10 秒钟，让你听听声！
-    std::cout << "🎵 正在播放中，请戴上耳机/打开音箱听声音 (持续10秒)..." << std::endl;
-    for(int i = 1; i <= 10; ++i) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        std::cout << i << "s..." << std::flush << " ";
+    // 4. 前台交互循环：死盯着你的键盘输入
+    std::string input;
+    while (true) {
+        std::cout << ">> ";
+        std::cin >> input; // 程序会卡在这里等敲回车，但后台音乐不会停！
+
+        System::ControlCommand cmd;
+        
+        if (input == "p") {
+            cmd.type = System::CommandType::PLAY_PAUSE;
+            controller.processCommand(cmd);
+        } 
+        else if (input == "+") {
+            cmd.type = System::CommandType::VOLUME_UP;
+            controller.processCommand(cmd);
+        } 
+        else if (input == "-") {
+            cmd.type = System::CommandType::VOLUME_DOWN;
+            controller.processCommand(cmd);
+        } 
+        else if (input == "n") {
+            cmd.type = System::CommandType::NEXT_TRACK;
+            controller.processCommand(cmd);
+        } 
+        else if (input == "q") {
+            std::cout << "准备熄火，安全关闭引擎..." << std::endl;
+            break; // 跳出死循环，准备结束程序
+        } 
+        else {
+            std::cout << "⚠️ 未知指令！请使用 p, +, -, n, q" << std::endl;
+        }
     }
-    std::cout << "\n" << std::endl;
 
-    // 7. 测试暂停功能
-    std::cout << "⏸️ 发送暂停指令..." << std::endl;
-    controller.processCommand(playCmd);
-    std::this_thread::sleep_for(std::chrono::seconds(3)); // 享受 3 秒钟毫无爆音的完美宁静
-
-    // 8. 安全关闭引擎
+    // 5. 安全退出
     engine.stop();
-    std::cout << "✅ 测试圆满结束，引擎已安全关闭。" << std::endl;
-
+    std::cout << "👋 拜拜！已安全退出。" << std::endl;
     return 0;
 }
