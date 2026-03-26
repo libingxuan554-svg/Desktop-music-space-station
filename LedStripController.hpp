@@ -11,6 +11,8 @@ public:
 
 private:
     void sendLeds(const std::vector<uint32_t>& colors);
+
     int fd = -1;
     static constexpr int LED_COUNT = 60;
+    static constexpr int RESET_BYTES = 500;
 };
