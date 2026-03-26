@@ -25,7 +25,7 @@ public:
 
     // LED strip control
     bool initLedStrip();
-    void updateLighting(float peak);
+    void updateLighting(const std::vector<float>& spectrum);
     void clearLighting();
 
 private:
