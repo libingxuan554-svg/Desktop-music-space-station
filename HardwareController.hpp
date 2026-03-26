@@ -4,8 +4,8 @@
 #include <mutex>
 #include <string>
 
-// Include miniaudio header
 #include "miniaudio.h"
+#include "LedStripController.hpp"
 
 class HardwareController {
 public:
@@ -16,20 +16,30 @@ public:
     bool initialize();
     void shutdown();
 
-    // ALSA Mixer hardware volume control (Core assessment point)
+    // ALSA Mixer hardware volume control
     bool setHardwareVolume(long volume_percent); // 0 to 100
     long getHardwareVolume();
 
-    // Interfaces can be reserved for other initializations like touch screen drivers
+    // Other hardware init hooks
     bool initTouchScreen();
+
+    // LED strip control
+    bool initLedStrip();
+    void updateLighting(float peak);
+    void clearLighting();
 
 private:
     // For multi-thread synchronization to avoid deadlocks
-    std::mutex m_hardwareMutex; 
+    std::mutex m_hardwareMutex;
+
     bool m_isInitialized;
+    bool m_ledStripInitialized;
 
     // miniaudio engine instance
-    ma_engine m_audioEngine; 
+    ma_engine m_audioEngine;
+
+    // LED strip controller
+    LedStripController m_ledStrip;
 
     // Internal ALSA helper variables
     long m_minVolume;
