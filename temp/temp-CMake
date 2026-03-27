@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.10)
+
+# Project Name
+project(DS18B20_Monitor VERSION 1.0 LANGUAGES CXX)
+
+# Set C++ standard to C++17 (Required for std::filesystem)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# Add the main executable and link source files
+add_executable(temp_monitor main.cpp ds18b20.cpp)
