@@ -137,7 +137,8 @@ void UIRenderer::renderMultiBarEQ(FramebufferUI* ui, float intensity, int cx, in
     const int totalW = numBars * barW + (numBars - 1) * spacing; // Calculate total width span
     const int startX = cx - totalW / 2;     // Calculate centered start X
     static float barHeights[numBars] = {0}; // Static persistence buffer: keep height from previous frame
-    static float personality[numBars] = {0.7f, 1.4f, 0.6f, 1.1f, 1.8f, 0.9f, 1.3f, 0.5f, 1.6f, 1.0f, 1.9f, 0.8f, 1.4f, 0.7f, 1.2f, 0.6f, 1.7f, 0.9f, 1.5f, 0.5f, 1.1f}; // 为每根柱子赋予差异化的振幅性格权重 | Give differentiated amplitude personality weights to each bar
+    static float personality[numBars] = {0.7f, 1.4f, 0.6f, 1.1f, 1.8f, 0.9f, 1.3f, 0.5f, 1.6f, 1.0f, 1.9f, 0.8f, 1.4f, 0.7f, 1.2f, 0.6f, 1.7f, 0.9f, 1.5f, 0.5f, 1.1f}; 
+    // Give differentiated amplitude personality weights to each bar
     static float noiseFrame = 0.0f; // Perlin noise generator timeline parameter
     noiseFrame += 0.15f;         // Push time flow
     if (intensity < 0.02f) {     // Under extremely low volume, bars accelerate falling to zero
