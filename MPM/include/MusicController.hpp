@@ -14,25 +14,25 @@ public:
     MusicController(WavDecoder* decoder, RingBuffer* buffer);
 
     void setPlaylist(const std::vector<std::string>& playlist);
-    void processCommand(const System::ControlCommand& cmd); // 确保返回 void
+    void processCommand(const System::ControlCommand& cmd); // Ensure the return type is void
     void onProcessAudio(std::vector<float>& buffer, uint32_t numFrames) override;
-//  新增：向外暴露当前的播放状态
+// Newly added: expose the current playback state
     bool isPlaying() const { return m_isPlaying; }
-//  新增：获取当前播放曲目的索引
+//  Newly added: get the index of the current track
     int getCurrentTrackIndex() const {
         return m_currentTrackIndex;
     }
-//  新增：获取当前音量值 (0.0 - 1.0)
+//Newly added: get the current volume value (0.0 - 1.0)
     float getVolume() const {
         return m_volume;
     }
 
 private:
-    WavDecoder* m_decoder;            // 对应报错的缺失字段
-    RingBuffer* m_ringBuffer;         // 对应报错的缺失字段
-    std::vector<std::string> m_playlist; // 对应报错的缺失字段
-    std::atomic<bool> m_isPlaying;    // 对应报错的缺失字段
-    int m_currentTrackIndex;          // 对应报错的缺失字段
+    WavDecoder* m_decoder;            // Missing field related to the reported error
+    RingBuffer* m_ringBuffer;         // Missing field related to the reported error
+    std::vector<std::string> m_playlist; // Missing field related to the reported error
+    std::atomic<bool> m_isPlaying;    // Missing field related to the reported error
+    int m_currentTrackIndex;          // Missing field related to the reported error
     float m_volume;
 };
 
