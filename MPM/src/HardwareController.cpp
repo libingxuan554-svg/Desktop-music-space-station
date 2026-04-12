@@ -26,7 +26,7 @@ bool HardwareController::initLedStrip() {
     }
     m_ledStripInitialized = true;
 
-    // 🌟 核心：启动独立的 LED 刷新工人！
+    // Core idea: start an independent LED refresh worker thread
     m_ledRunning = true;
     m_ledThread = std::thread(&HardwareController::ledWorker, this);
     return true;
@@ -47,11 +47,12 @@ void HardwareController::shutdown() {
 
 void HardwareController::updateLighting(const std::vector<float>& spectrum) {
     {
-    //音频线程只负责把数据“丢进信箱”，瞬间返回，绝不阻塞！
+    //The audio thread only pushes data into the "mailbox" and returns immediately without blocking
     std::lock_guard<std::mutex> lock(m_spectrumMutex);
     m_currentSpectrum = spectrum;
     }
-    m_ledCV.notify_one(); // 🔔 唤醒沉睡的 LED 工人！
+    m_ledCV.notify_one(); // Wake up the sleeping LED worker
+}
 }
 
 void HardwareController::ledWorker() {
@@ -59,12 +60,12 @@ void HardwareController::ledWorker() {
         std::vector<float> specCopy;
         {
             std::unique_lock<std::mutex> lock(m_spectrumMutex);
-            // 彻底挂起线程！只有收到 notify_one 或者系统准备退出时，内核才会唤醒它
+            // Fully suspend the thread. It will only be woken up by notify_one
             m_ledCV.wait(lock, [this] { 
                 return !m_currentSpectrum.empty() || !m_ledRunning; 
             });
 
-            if (!m_ledRunning) break; // 收到下班通知，安全退出
+            if (!m_ledRunning) break; // or when the system is preparing to exit
 
             specCopy = m_currentSpectrum;
         }
