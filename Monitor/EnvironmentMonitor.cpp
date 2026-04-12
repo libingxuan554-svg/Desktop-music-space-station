@@ -4,7 +4,6 @@
 #include <string>
 #include <chrono>
 #include <iostream>
-// Linux terminal and string processing
 #include <cstdio>
 #include <algorithm>
 #include <sys/timerfd.h>
