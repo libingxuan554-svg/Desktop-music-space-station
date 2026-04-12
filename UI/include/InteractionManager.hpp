@@ -15,7 +15,7 @@ namespace UI {
  * @enum UIPage
  * @brief Defines the current UI page state of the system
  */
-enum class UIPage { STANDBY, MUSIC_LIST, PLAYER }; // 待机页面、音乐列表、播放器界面 | Standby page, music list, player interface
+enum class UIPage { STANDBY, MUSIC_LIST, PLAYER }; // Standby page, music list, player interface
 
 /**
  * @class InteractionManager
