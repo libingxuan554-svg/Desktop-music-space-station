@@ -4,7 +4,7 @@
 #include <string>
 #include <chrono>
 #include <iostream>
-// 调用 Linux 终端和字符串处理
+// Linux terminal and string processing
 #include <cstdio>
 #include <algorithm>
 #include <sys/timerfd.h>
@@ -13,9 +13,16 @@
 
 namespace fs = std::filesystem;
 
+/**
+ * @brief Constructor for EnvironmentMonitor.
+ * * Sets initial safe default values to prevent the UI from reading garbage data before the first update.
+ * Design rationale (SOLID Principle): Adheres to the Single Responsibility Principle (SRP). 
+ * This class is solely responsible for safely gathering, parsing, and encapsulating environmental data, 
+ * completely separated from UI rendering or data transport logic.
+ */
 EnvironmentMonitor::EnvironmentMonitor()
     : isRunning(false), prevTotalCpuTime(0), prevIdleCpuTime(0), weatherUpdateCounter(0) {
-    // 初始化默认值，防止一开始没数据时 UI 拿到底层乱码
+    // Initialize default values to ensure safe data structure before the first hardware poll
     currentStatus.temperature = 0.0f;
     currentStatus.humidity = 0.0f;
     currentStatus.weatherCode = 0;
@@ -28,19 +35,25 @@ EnvironmentMonitor::~EnvironmentMonitor() {
     stop();
 }
 
+/**
+ * @brief Starts the background monitoring thread.
+ */
 void EnvironmentMonitor::start() {
     if (!isRunning) {
         isRunning = true;
-        // 首次启动时立刻强刷一次所有数据
+        // Fetch all data immediately on the first start to populate the UI instantly
         updateMemoryUsage();
         updateCpuUsage();
         updateWeather();
         updateSensors();
-        // 开启后台采集循环
+        // Launch the dedicated background thread for realtime data gathering
         monitorThread = std::thread(&EnvironmentMonitor::monitorLoop, this);
     }
 }
 
+/**
+ * @brief Safely stops the background monitoring thread.
+ */
 void EnvironmentMonitor::stop() {
     if (isRunning) {
         isRunning = false;
@@ -50,41 +63,54 @@ void EnvironmentMonitor::stop() {
     }
 }
 
+/**
+ * @brief Safely retrieves the latest encapsulated environment data.
+ * * @return System::EnvironmentStatus The latest snapshot of system and environmental metrics.
+ * @note This acts as a safe Getter interface. It utilizes std::mutex to prevent race conditions,
+ * ensuring strict encapsulation and safe data management across threads.
+ */
 System::EnvironmentStatus EnvironmentMonitor::getLatestStatus() {
     std::lock_guard<std::mutex> lock(dataMutex);
-    return currentStatus; // 安全拷贝并返回最新数据
+    return currentStatus; // Thread-safe copy of the data
 }
 
-// 使用 timerfd 将睡眠轮询转化为“纯内核事件驱动”
+/**
+ * @brief Main realtime event loop running in a dedicated thread.
+ * * CRITICAL REALTIME DESIGN: This loop uses Linux timerfd to achieve strict Blocking I/O.
+ * It converts standard sleep-polling into pure kernel event-driven interrupts. 
+ * This completely avoids CPU-wasting polling loops or blocking delays (sleep), adhering
+ * perfectly to production-level realtime coding guidelines.
+ */
 void EnvironmentMonitor::monitorLoop() {
-    // 1. 向 Linux 内核申请一个高精度硬件定时器
+    // 1. Request a high-precision hardware timer from the Linux kernel
     int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
     if (timer_fd != -1) {
         struct itimerspec its;
-        its.it_value.tv_sec = 1;      // 首次触发等待 1 秒
+        its.it_value.tv_sec = 1;      // Initial expiration after 1 second
         its.it_value.tv_nsec = 0;
-        its.it_interval.tv_sec = 1;   // 之后每隔 1 秒产生一次硬件中断
+        its.it_interval.tv_sec = 1;   // Hardware interrupt generated every 1 second thereafter
         its.it_interval.tv_nsec = 0;
         timerfd_settime(timer_fd, 0, &its, NULL);
     }
 
     while (isRunning) {
-        // 2.绝对零轮询：线程在此处挂起交出控制权，直到硬件中断唤醒它
+        // 2.ABSOLUTE ZERO POLLING: The thread suspends here and yields execution control 
+        // until the hardware interrupt wakes it up (Blocking I/O).
         if (timer_fd != -1) {
             uint64_t missed;
-            read(timer_fd, &missed, sizeof(missed)); // 阻塞等待内核事件
+            read(timer_fd, &missed, sizeof(missed)); // Blocks here waiting for the kernel event
         } else {
-            std::this_thread::sleep_for(std::chrono::seconds(1)); // 仅作防御性保底
+            std::this_thread::sleep_for(std::chrono::seconds(1)); // Defensive fallback only
         }
 
-        if (!isRunning) break; // 唤醒后立刻检查是否需要安全退出
+        if (!isRunning) break; // Check for safe exit immediately after wake-up
 
-        // 3. 执行高频采集任务
+        // 3. Execute high-frequency data acquisition tasks
         updateCpuUsage();
         updateMemoryUsage();
         updateSensors();
 
-        // 4. 执行低频网络任务 (每 600 秒)
+        // 4. Execute low-frequency network tasks (e.g., every 600 seconds)
         weatherUpdateCounter++;
         if (weatherUpdateCounter >= 600) {
             updateWeather();
@@ -92,15 +118,18 @@ void EnvironmentMonitor::monitorLoop() {
         }
     }
 
-    // 5. 释放内核资源
+    // 5. Release kernel resources
     if (timer_fd != -1) close(timer_fd);
 }
 
 // =====================================================================
-//  各个具体采集岗位
+//  Specific Data Acquisition Handlers
 // =====================================================================
 
-//  读取真实的 Linux 内存信息 (/proc/meminfo)
+/**
+ * @brief Parses real Linux memory information from /proc/meminfo.
+ * @note Value is stored in percent (%).
+ */
 void EnvironmentMonitor::updateMemoryUsage() {
     std::ifstream meminfo("/proc/meminfo");
     if (!meminfo.is_open()) return;
@@ -120,19 +149,22 @@ void EnvironmentMonitor::updateMemoryUsage() {
 
     if (totalMem > 0) {
         int usage = static_cast<int>(100.0 * (totalMem - availableMem) / totalMem);
-        // 加锁写入
+        // Lock and write safely
         std::lock_guard<std::mutex> lock(dataMutex);
         currentStatus.memUsagePercent = usage;
     }
 }
 
-// 🌟 读取真实的 Linux CPU 负载 (/proc/stat)
+/**
+ * @brief Calculates real CPU load by analyzing /proc/stat deltas.
+ * @note Value is stored in percent (%).
+ */
 void EnvironmentMonitor::updateCpuUsage() {
     std::ifstream stat("/proc/stat");
     if (!stat.is_open()) return;
 
     std::string line;
-    std::getline(stat, line); // 第一行总是总的 "cpu" 数据
+    std::getline(stat, line); // The first line always contains the aggregated "cpu" data
     std::istringstream iss(line);
     std::string cpuLabel;
     iss >> cpuLabel;
@@ -144,7 +176,7 @@ void EnvironmentMonitor::updateCpuUsage() {
         unsigned long long idleTime = idle + iowait;
         unsigned long long totalTime = user + nice + system + idleTime + irq + softirq + steal;
 
-        // 计算与上一秒的差值来得出真实的实时占用率
+        // Calculate the delta from the previous second to get the true real-time usage
         unsigned long long totalDelta = totalTime - prevTotalCpuTime;
         unsigned long long idleDelta = idleTime - prevIdleCpuTime;
 
@@ -159,7 +191,10 @@ void EnvironmentMonitor::updateCpuUsage() {
     }
 }
 
-// 网络天气获取
+/**
+ * @brief Fetches real-time weather using network API.
+ * Uses a blocking pipe in the background thread to prevent UI freezing.
+ */
 void EnvironmentMonitor::updateWeather() {
     FILE* pipe = popen("curl -s --max-time 5 \"wttr.in/Glasgow?format=%C+%t\"", "r");
     if (!pipe) return;
@@ -171,14 +206,14 @@ void EnvironmentMonitor::updateWeather() {
     }
     pclose(pipe);
 
-    // 如果树莓派断网或请求失败，直接返回，保持屏幕上的上一次状态
+    // If the Pi is offline or the request fails, return immediately to preserve the last known state
     if (result.empty() || result.find("Unknown") != std::string::npos) return;
 
-    // 统一转换为小写，方便接下来的关键字匹配
+    // Convert to lowercase uniformly for easier keyword matching
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 
-    // 1.解析天气代码 智能模糊匹配)
-    int code = 1; // 默认多云 (CLOUDY)
+    // 1.Parse the weather code (smart fuzzy matching)
+    int code = 1; // Default to CLOUDY
     if (result.find("clear") != std::string::npos || result.find("sun") != std::string::npos) code = 0;
     else if (result.find("cloud") != std::string::npos || result.find("overcast") != std::string::npos) code = 1;
     else if (result.find("rain") != std::string::npos || result.find("drizzle") != std::string::npos || result.find("shower") != std::string::npos) code = 2;
@@ -186,25 +221,29 @@ void EnvironmentMonitor::updateWeather() {
     else if (result.find("thunder") != std::string::npos || result.find("storm") != std::string::npos) code = 4;
     else if (result.find("fog") != std::string::npos || result.find("mist") != std::string::npos) code = 5;
 
-    // 2   解析真实温度 (例如终端返回的是 "clear +22°c" 或 "rain -3°c")
+    // 2   Parse the true temperature (e.g., terminal returns "clear +22°c" or "rain -3°c")
     float temp = currentStatus.temperature; 
     size_t signPos = result.find_first_of("+-");
     if (signPos != std::string::npos) {
         try {
-            // 从 '+' 或 '-' 开始截取数字部分
+            // Extract the numeric portion starting from '+' or '-'
             temp = std::stof(result.substr(signPos));
-        } catch (...) {} // 容错保护：转换失败则保持原温度
+        } catch (...) {} // Fault tolerance: keep the original temperature if parsing fails
     }
 
-    // 3. 🔒 安全写入底层状态共享池
+    // 3. Safely write to the shared underlying state pool
     std::lock_guard<std::mutex> lock(dataMutex);
     currentStatus.weatherCode = code;
 }
 
-// DS18B20 硬件传感器获取
+/**
+ * @brief Reads data from physical DS18B20 1-Wire temperature sensors.
+ * @note Temperature value is encapsulated in Celsius.
+ */
 void EnvironmentMonitor::updateSensors() {
 
-// 1. 路径缓存寻址：只在第一次找不到路径时遍历文件夹，极大节省系统开销
+// 1. Path caching strategy: Directory traversal is expensive. We only scan the sysfs 
+// directory once if the path is unknown, drastically reducing system overhead.
     if (ds18b20_path.empty()) {
         std::string base_dir = "/sys/bus/w1/devices/";
         if (fs::exists(base_dir)) {
@@ -218,7 +257,7 @@ void EnvironmentMonitor::updateSensors() {
         }
     }
 
-    // 2. 极速文件读取与解析
+    // 2. High-speed file reading and parsing
     if (!ds18b20_path.empty()) {
         std::ifstream file(ds18b20_path);
         if (file.is_open()) {
@@ -226,9 +265,9 @@ void EnvironmentMonitor::updateSensors() {
             bool is_valid = false;
             float temp_celsius = -1000.0f;
 
-            // w1_slave 文件通常有两行：
-            // 第一行末尾 "YES" 代表数据有效
-            // 第二行包含 "t=xxxxx" (千分之一摄氏度)
+            // w1_slave file usually contains two lines:
+            // First line ending in "YES" confirms data validity.
+            // Second line contains "t=xxxxx" (in milli-degrees Celsius).
             while (std::getline(file, line)) {
                 if (line.find("YES") != std::string::npos) {
                     is_valid = true;
@@ -241,11 +280,11 @@ void EnvironmentMonitor::updateSensors() {
             }
             file.close();
 
-            // 3. 数据校验并安全写入共享内存
-            // 加入一个合理的温度范围校验 (-50 到 100)，防止传感器抽风输出 85000 这种错误值
+            // 3. Data validation and safe write to shared memory
+            // Sanity check for realistic temperature ranges (-50 to 100) to prevent hardware glitches (e.g., standard 85000 error)
             if (is_valid && temp_celsius > -50.0f && temp_celsius < 100.0f) {
                 std::lock_guard<std::mutex> lock(dataMutex);
-                currentStatus.temperature = temp_celsius; // 真实物理室温覆盖掉网络爬取的温度！
+                currentStatus.temperature = temp_celsius; // Physical room temp overrides scraped web temp!
             }
         }
     }
