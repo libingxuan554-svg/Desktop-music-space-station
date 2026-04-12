@@ -6,44 +6,70 @@
 #include <atomic>
 #include <mutex>
 
+/**
+ * @brief Manages the real-time acquisition of hardware and software environmental metrics.
+ * * Design rationale (SOLID Principle - SRP): 
+ * Adheres to the Single Responsibility Principle. This class is strictly responsible for 
+ * monitoring and aggregating data (CPU, memory, weather, and 1-Wire sensors) via blocking I/O 
+ * in a dedicated background thread. It perfectly encapsulates the complexity of data gathering 
+ * and provides a safe, thread-locked interface for the UI to consume without exposing internal states.
+ */
 class EnvironmentMonitor {
 public:
+    /**
+     * @brief Constructor for EnvironmentMonitor.
+     */
     EnvironmentMonitor();
+
+    /**
+     * @brief Destructor for EnvironmentMonitor. Ensures safe thread cleanup.
+     */
     ~EnvironmentMonitor();
 
-    // 启动后台采集线程
+    /**
+     * @brief Starts the background data acquisition thread.
+     */
     void start();
-    // 停止采集线程
+
+    /**
+     * @brief Safely stops the background data acquisition thread.
+     */
     void stop();
 
-    // 供外部 (如 UI 线程) 随时安全获取最新整合好数据的唯一接口
+    /**
+     * @brief The sole safe interface for external threads (e.g., UI) to fetch the latest aggregated data.
+     * @return System::EnvironmentStatus A thread-safe copy of the latest system and environmental metrics.
+     */
     System::EnvironmentStatus getLatestStatus();
 
 private:
+     /**
+     * @brief Main realtime event loop running in the background thread.
+     */
     void monitorLoop();
 
-    // 各个具体的数据采集工位 (私有函数，对外隐藏)
+    // Specific data acquisition handlers (Private to enforce encapsulation)
     void updateCpuUsage();
     void updateMemoryUsage();
     void updateWeather();
     void updateSensors();
 
-    // 线程与同步控制
+    // Threading and synchronization controls
     std::thread monitorThread;
     std::atomic<bool> isRunning;
     std::mutex dataMutex;
 
-    // 核心数据聚合体
+    // Core aggregated data structure
     System::EnvironmentStatus currentStatus;
 
-    // 用于计算 CPU 占用率的历史数据状态
+    // Historical states for calculating real-time CPU load
     unsigned long long prevTotalCpuTime;
     unsigned long long prevIdleCpuTime;
 
-    // 用于控制低频刷新的计时器 (比如天气没必要每秒刷，10分钟刷一次即可)
+    // Timer for low-frequency updates (e.g., weather updates every 10 minutes instead of every second)
     int weatherUpdateCounter;
 
-    // 缓存 DS18B20 传感器的文件路径
+    // Cached file path for the DS18B20 1-Wire sensor to avoid expensive directory traversals
     std::string ds18b20_path;
 
 };
