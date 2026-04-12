@@ -8,7 +8,7 @@
 #include <atomic>
 #include <cmath> 
 #include <numeric> 
-#include <sys/timerfd.h> //linux 内核定时器
+#include <sys/timerfd.h> // Linux 内核定时器
 #include <unistd.h>
 #include <mutex>
 #include <condition_variable>
@@ -26,7 +26,6 @@
 #include "InteractionManager.hpp"
 #include "EnvironmentMonitor.hpp"
 
-
 namespace fs = std::filesystem;
 
 int main() {
@@ -41,14 +40,14 @@ int main() {
 
     MediaProgressManager progressMgr(&decoder);
 
-    //启动数据采集
+    // 启动数据采集
     EnvironmentMonitor envMonitor;
     envMonitor.start();
 
-    //   if (engine.init("plughw:0,0", 44100)) if use AUX wire choose this code
+    // 自动路由到蓝牙：AudioEngine 已重构，传入 "default" 即可
     if (engine.init("default", 44100)) {
         engine.start();
-        std::cout << "✅ ALSA Engine Started." << std::endl;
+        std::cout << "✅ ALSA Engine Started (Target: JBL Go 3)." << std::endl;
     }
 
     std::vector<std::string> playlist;
@@ -72,9 +71,9 @@ int main() {
     std::queue<System::ControlCommand> cmdQueue;
     std::mutex cmdMutex;
     std::condition_variable cmdCV;
-    std::atomic<bool> uiRunning{true}; // 将 uiRunning 提前定义
+    std::atomic<bool> uiRunning{true};
 
-    // 消费者线程：专门处理指令，0 轮询
+    // 消费者线程：指令处理
     std::thread cmdWorker([&]() {
         while (true) {
             System::ControlCommand cmd;
@@ -85,7 +84,6 @@ int main() {
                 cmd = cmdQueue.front();
                 cmdQueue.pop();
             }
-            // 🌟 核心逻辑：拦截待机暂停指令
             if (cmd.type == System::CommandType::ENTER_STANDBY) {
                 if (controller.isPlaying()) {
                     System::ControlCommand p; p.type = System::CommandType::PLAY_PAUSE;
@@ -97,7 +95,6 @@ int main() {
         }
     });
 
-    // 生产者 1：UI 触摸（秒回，不卡渲染）
     UI::InteractionManager::setCommandEmitter([&](const System::ControlCommand& cmd) {
         std::lock_guard<std::mutex> lock(cmdMutex);
         cmdQueue.push(cmd);
@@ -109,73 +106,53 @@ int main() {
         [](int deltaY) { UI::InteractionManager::handleScroll(deltaY); }
     );
 
+    // UI 渲染主线程
     std::thread uiThread([&]() {
         System::PlaybackStatus status;
-
         std::vector<std::string> displayNames;
         for (const auto& pathStr : playlist) {
             displayNames.push_back(fs::path(pathStr).stem().string());
         }
         status.playlist = displayNames;
 
-        // 新增：创建高精度内核定时器 (33.3ms = 30FPS)
+        // 创建高精度内核定时器 (33.3ms = 30FPS)
         int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
         if (timer_fd == -1) {
-			std::cerr << "FATAL ERROR: Failed to create hardware timer! RTOS constraints violated." << std::endl;
-            exit(EXIT_FAILURE); // 🌟 拿不到硬件中断，直接自爆，绝不用 sleep 苟活！
+            std::cerr << "FATAL ERROR: Failed to create hardware timer!" << std::endl;
+            exit(EXIT_FAILURE);
         }
-            struct itimerspec its;
-            its.it_value.tv_sec = 0;
-            its.it_value.tv_nsec = 33333333; // 首次触发
-            its.it_interval.tv_sec = 0;
-            its.it_interval.tv_nsec = 33333333; // 循环周期
-            timerfd_settime(timer_fd, 0, &its, NULL);
+        
+        struct itimerspec its;
+        its.it_value.tv_sec = 0;
+        its.it_value.tv_nsec = 33333333;
+        its.it_interval.tv_sec = 0;
+        its.it_interval.tv_nsec = 33333333;
+        timerfd_settime(timer_fd, 0, &its, NULL);
 
         while (uiRunning) {
             progressMgr.injectTimeData(status);
             status.isPlaying = controller.isPlaying();
             status.volume = static_cast<int32_t>(controller.getVolume() * 100.0f);
 
-            // 增量修复：获取当前正在播放的歌名
             int currentIndex = controller.getCurrentTrackIndex();
-            if (currentIndex >= 0 && currentIndex < displayNames.size()) {
+            if (currentIndex >= 0 && (size_t)currentIndex < displayNames.size()) {
                 status.songName = displayNames[currentIndex];
             }
 
-            // 开机自动播放拦截器
-            // 应对音频底层初始化延迟后导致的“幽灵播放”
-            static bool bootAutoPlayIntercepted = false;
-            static int bootFrameCounter = 0;
-            if (!bootAutoPlayIntercepted) {
-                bootFrameCounter++;
-                // 只要发现在初始阶段偷偷开始播放了，立刻一枪打断！
-                if (status.isPlaying) {
-                    System::ControlCommand pauseCmd;
-                    pauseCmd.type = System::CommandType::PLAY_PAUSE;
-                    controller.processCommand(pauseCmd);
-                    status.isPlaying = false; // 同步更新UI状态
-                    bootAutoPlayIntercepted = true;
-                }
-                // 保护机制：如果大约 2 秒内没发生自动播放，或者用户已经主动点屏幕离开了待机界面，解除拦截
-                if (bootFrameCounter > 60) {
-                    bootAutoPlayIntercepted = true;
-                }
-            }
-
-            // --- 保持原状：自动连播逻辑 ---
+            // 自动连播逻辑
             if (status.isPlaying && status.totalDuration > 0) {
                 if (status.currentPosition >= status.totalDuration) {
                     System::ControlCommand nextCmd;
                     nextCmd.type = System::CommandType::NEXT_TRACK;
-		    {
-            		std::lock_guard<std::mutex> lock(cmdMutex);
-            		cmdQueue.push(nextCmd);
-            		cmdCV.notify_one(); // 🔔 唤醒后台工人
-        	    }
-        	    status.isPlaying = false;
-    		}
-	    }
-            // --- 保持原状：频谱能量计算 ---
+                    {
+                        std::lock_guard<std::mutex> lock(cmdMutex);
+                        cmdQueue.push(nextCmd);
+                        cmdCV.notify_one();
+                    }
+                }
+            }
+
+            // 频谱能量计算
             System::AudioVisualData visual;
             if (status.isPlaying) {
                 std::vector<float> spectrum = hw.getCurrentSpectrum();
@@ -187,32 +164,22 @@ int main() {
                 visual.overallIntensity = 0.0f;
             }
 
-            // 🌟 注入模拟环境数据（后续您在此处替换为真实传感器读取即可）
-    //        System::EnvironmentStatus env;
-  //          env.temperature = 23.4f; // 示例值
-//            env.humidity = 65.0f;    // 示例值
-            //env.weatherCode = 2;     // 示例值：2 代表下雨
-            //env.cpuLoadPercent = 32; // 示例值
-            //env.memUsagePercent = 70;// 示例值
-
             System::EnvironmentStatus env = envMonitor.getLatestStatus();
-
             UI::InteractionManager::updateSystemStatus(status, visual);
             UI::InteractionManager::updateEnvStatus(env);
             UI::InteractionManager::renderCurrentPage(&fbUi);
 
-            //使用阻塞 read 等待硬件定时器中断，彻底消灭 Polling (轮询)
+            // 阻塞等待硬件定时器，彻底消除 Poll
             if (timer_fd != -1) {
                 uint64_t missed;
                 read(timer_fd, &missed, sizeof(missed)); 
-            } 
+            }
+        } // <--- 🌟 修复点：正确闭合 while 循环
 
-        // 线程退出时清理描述符
         if (timer_fd != -1) close(timer_fd);
-
     });
 
-// 终端输入。阻塞等待，绝对 0 轮询
+    // 终端输入循环
     std::string input;
     while (uiRunning && std::cout << ">> " && std::cin >> input) {
         System::ControlCommand cmd;
@@ -230,7 +197,7 @@ int main() {
         }
     }
 
-    // 安全退出序列：Join 必须在 uiRunning 设为 false 之后
+    // 安全退出序列
     uiRunning = false;
     cmdCV.notify_all(); 
     if (cmdWorker.joinable()) cmdWorker.join();
@@ -242,3 +209,4 @@ int main() {
     envMonitor.stop();
     return 0;
 }
+// <--- 🌟 修复点：删除了多余的花括号
