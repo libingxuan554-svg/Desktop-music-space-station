@@ -35,9 +35,6 @@ EnvironmentMonitor::~EnvironmentMonitor() {
     stop();
 }
 
-/**
- * @brief Starts the background monitoring thread.
- */
 void EnvironmentMonitor::start() {
     if (!isRunning) {
         isRunning = true;
@@ -51,9 +48,6 @@ void EnvironmentMonitor::start() {
     }
 }
 
-/**
- * @brief Safely stops the background monitoring thread.
- */
 void EnvironmentMonitor::stop() {
     if (isRunning) {
         isRunning = false;
@@ -126,10 +120,6 @@ void EnvironmentMonitor::monitorLoop() {
 //  Specific Data Acquisition Handlers
 // =====================================================================
 
-/**
- * @brief Parses real Linux memory information from /proc/meminfo.
- * @note Value is stored in percent (%).
- */
 void EnvironmentMonitor::updateMemoryUsage() {
     std::ifstream meminfo("/proc/meminfo");
     if (!meminfo.is_open()) return;
@@ -155,10 +145,6 @@ void EnvironmentMonitor::updateMemoryUsage() {
     }
 }
 
-/**
- * @brief Calculates real CPU load by analyzing /proc/stat deltas.
- * @note Value is stored in percent (%).
- */
 void EnvironmentMonitor::updateCpuUsage() {
     std::ifstream stat("/proc/stat");
     if (!stat.is_open()) return;
@@ -236,10 +222,6 @@ void EnvironmentMonitor::updateWeather() {
     currentStatus.weatherCode = code;
 }
 
-/**
- * @brief Reads data from physical DS18B20 1-Wire temperature sensors.
- * @note Temperature value is encapsulated in Celsius.
- */
 void EnvironmentMonitor::updateSensors() {
 
 // 1. Path caching strategy: Directory traversal is expensive. We only scan the sysfs 
@@ -249,7 +231,7 @@ void EnvironmentMonitor::updateSensors() {
         if (fs::exists(base_dir)) {
             for (const auto& entry : fs::directory_iterator(base_dir)) {
                 std::string filename = entry.path().filename().string();
-                if (filename.find("28-") == 0) { // DS18B20 的家族代码是 28
+                if (filename.find("28-") == 0) { // '28' is the family code for DS18B20
                     ds18b20_path = entry.path().string() + "/w1_slave";
                     break;
                 }
