@@ -7,7 +7,7 @@
 #include <vector>
 
 // ==========================================
-// 1. 核心算法：Goertzel 频谱提取 (提取特定频率能量)
+// 1. Core algorithm: Goertzel spectrum extraction
 // ==========================================
 float goertzelMagnitude(int numSamples, int targetFreq, int sampleRate, const float* data) {
     float k = 0.5f + ((float)numSamples * targetFreq) / sampleRate;
@@ -26,7 +26,7 @@ float goertzelMagnitude(int numSamples, int targetFreq, int sampleRate, const fl
 }
 
 // ==========================================
-// 2. 引擎构造与生命周期管理
+//2. Engine construction and lifecycle management
 // ==========================================
 AudioEngine::AudioEngine(AudioSource* src, HardwareController* hw) 
     : source(src), hwController(hw), pcmHandle(nullptr), running(false) {}
@@ -37,15 +37,16 @@ AudioEngine::~AudioEngine() {
 
 bool AudioEngine::init(const char* device, unsigned int sampleRate) {
     int err;
-    // 打开 ALSA PCM 播放设备
+    // Open the ALSA PCM playback device
     if ((err = snd_pcm_open(&pcmHandle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
-        std::cerr << "ALSA 音频设备打开失败: " << snd_strerror(err) << std::endl;
+        std::cerr << "ALSA audio device open failed: " << snd_strerror(err) << std::endl;
         return false;
     }
 
-    // 设置硬件参数 (16位小端, 交错模式, 立体声, 采样率)
+  // Set hardware parameters
+    // (16-bit little endian, interleaved mode, stereo, sample rate)
     if ((err = snd_pcm_set_params(pcmHandle, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 2, sampleRate, 1, 500000)) < 0) {
-        std::cerr << "ALSA 参数设置失败: " << snd_strerror(err) << std::endl;
+        std::cerr << "ALSA parameter setup failed: " << snd_strerror(err) << std::endl;
         return false;
     }
     return true;
@@ -70,55 +71,55 @@ void AudioEngine::stop() {
 
 void AudioEngine::recoverFromError(int err) {
     if (err == -EPIPE) {
-        snd_pcm_prepare(pcmHandle); // 恢复音频欠载 (XRUN)
+        snd_pcm_prepare(pcmHandle); // Recover from audio underrun (XRUN)
     }
 }
 
 // ==========================================
-// 3. 核心音频工厂 (截取数据 -> 算频谱 -> 发信箱 -> 播声音)
+// 3. Core audio pipeline(fetch data -> analyze spectrum -> send lighting data -> play audio)
 // ==========================================
 void AudioEngine::playbackWorker() {
     const int periodSize = 1024;
     const int sampleRate = 44100;
     
-    std::vector<float> floatBuffer(periodSize * 2, 0.0f); // 立体声浮点缓冲
-    std::vector<short> shortBuffer(periodSize * 2, 0);    // ALSA 播放所需的 16-bit 缓冲
-    std::vector<float> mono(periodSize, 0.0f);            // 用于算频谱的单声道混音缓冲
+    std::vector<float> floatBuffer(periodSize * 2, 0.0f); // Stereo floating-point buffer
+    std::vector<short> shortBuffer(periodSize * 2, 0);    // 16-bit buffer required by ALSA playback
+    std::vector<float> mono(periodSize, 0.0f);            // Mono mix buffer for spectrum analysis
 
-    // 对应紫、蓝、青、绿、黄、橙、红的 7 个代表性频率 (Hz)
+    // Seven representative frequencies (Hz)corresponding to violet, blue, cyan, green, yellow, orange, and red
     std::vector<int> targetFreqs = {60, 150, 400, 1000, 2000, 4000, 8000};
     std::vector<float> spectrum(7, 0.0f);
 
     while (running) {
         if (source) {
-            // 步骤 A: 向解码器索要一帧纯净的音频数据
+            // Step A: Request one frame of clean audio data from the decoder
             source->onProcessAudio(floatBuffer, periodSize);
 
-            // 步骤 B: 将左右声道混合成单声道，给灯带算频谱用
+            // Step B: Mix left and right channels into mono for lighting spectrum analysis
             for (int i = 0; i < periodSize; ++i) {
                 mono[i] = (floatBuffer[i * 2] + floatBuffer[i * 2 + 1]) * 0.5f;
             }
 
-            // 步骤 C: 用 Goertzel 算法揪出这 7 个频率的能量
+            // Step C: Use the Goertzel algorithm to extract the energy of these seven target frequencies
             float maxMag = 0.0f;
             for (size_t i = 0; i < targetFreqs.size(); ++i) {
                 spectrum[i] = goertzelMagnitude(periodSize, targetFreqs[i], sampleRate, mono.data());
                 if (spectrum[i] > maxMag) maxMag = spectrum[i];
             }
 
-            // 步骤 D: 数据归一化 (防爆音、防白屏)
+            // Step D: Normalize the data(prevent clipping and over-bright lighting output)
             if (maxMag > 1e-6f) {
                 for (float& v : spectrum) v /= maxMag;
             } else {
                 std::fill(spectrum.begin(), spectrum.end(), 0.0f);
             }
 
-            // 🌟 步骤 E: 把算好的灯效数据秒传给硬件管家！(瞬间完成，绝不阻塞)
+            // Step E: Send the calculated lighting data to the hardware controller immediately (non-blocking)
             if (hwController) {
                 hwController->updateLighting(spectrum);
             }
 
-            // 步骤 F: 把浮点音频转回 16-bit PCM，准备发给蓝牙耳机播放
+            // Step F: Convert floating-point audio back to 16-bit PCM for playback through the output device
             for (int i = 0; i < periodSize * 2; ++i) {
                 float val = floatBuffer[i];
                 if (val > 1.0f) val = 1.0f;
@@ -126,13 +127,13 @@ void AudioEngine::playbackWorker() {
                 shortBuffer[i] = static_cast<short>(val * 32767.0f);
             }
 
-            // 步骤 G: 真正的物理播放 (写入底层 ALSA)
+            // Step G: Perform the actual playback(write audio data into the ALSA layer)
             int err = snd_pcm_writei(pcmHandle, shortBuffer.data(), periodSize);
             if (err < 0) {
                 recoverFromError(err);
             }
         } else {
-            // 如果还没准备好音乐，休眠一下防 CPU 空转
+            // If no music is ready yet, sleep briefly to avoid CPU busy waiting
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
