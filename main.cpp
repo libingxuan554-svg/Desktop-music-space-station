@@ -45,6 +45,7 @@ int main() {
     EnvironmentMonitor envMonitor;
     envMonitor.start();
 
+    //   if (engine.init("plughw:0,0", 44100)) if use AUX wire choose this code
     if (engine.init("default", 44100)) {
         engine.start();
         std::cout << "✅ ALSA Engine Started." << std::endl;
