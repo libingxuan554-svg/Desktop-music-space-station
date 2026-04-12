@@ -18,8 +18,8 @@ include_directories(include)
 add_library(UI_Module STATIC 
 	src/FramebufferUI.cpp
 	src/UIRenderer.cpp
-	src/InteractionManager.cpp  # 新增
-                  src/TouchHandler.cpp        # 新增
+	src/InteractionManager.cpp  
+    src/TouchHandler.cpp        
 )
 target_link_libraries(UI_Module PUBLIC pthread)
 
