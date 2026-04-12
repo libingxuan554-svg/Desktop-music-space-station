@@ -117,16 +117,18 @@ int main() {
         }
         status.playlist = displayNames;
 
-// 新增：创建高精度内核定时器 (33.3ms = 30FPS)
+        // 新增：创建高精度内核定时器 (33.3ms = 30FPS)
         int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
-        if (timer_fd != -1) {
+        if (timer_fd == -1) {
+			std::cerr << "FATAL ERROR: Failed to create hardware timer! RTOS constraints violated." << std::endl;
+            exit(EXIT_FAILURE); // 🌟 拿不到硬件中断，直接自爆，绝不用 sleep 苟活！
+        }
             struct itimerspec its;
             its.it_value.tv_sec = 0;
             its.it_value.tv_nsec = 33333333; // 首次触发
             its.it_interval.tv_sec = 0;
             its.it_interval.tv_nsec = 33333333; // 循环周期
             timerfd_settime(timer_fd, 0, &its, NULL);
-        }
 
         while (uiRunning) {
             progressMgr.injectTimeData(status);
@@ -202,11 +204,7 @@ int main() {
             if (timer_fd != -1) {
                 uint64_t missed;
                 read(timer_fd, &missed, sizeof(missed)); 
-            } else {
-                // 仅作为 Fallback 保底
-                std::this_thread::sleep_for(std::chrono::milliseconds(33)); 
-            }
-        }
+            } 
 
         // 线程退出时清理描述符
         if (timer_fd != -1) close(timer_fd);
