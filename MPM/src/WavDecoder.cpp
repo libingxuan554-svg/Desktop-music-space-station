@@ -21,16 +21,16 @@ bool WavDecoder::open(const std::string& path) {
     char header[44];
     file.read(header, 44);
 
-    // 解析基础信息
+    
     channels = *reinterpret_cast<short*>(header + 22);
     sampleRate = *reinterpret_cast<int*>(header + 24);
     
-    // 强制重新计算大小，不信任 Header 里的 Subchunk2Size
+    // Recalculate the data size instead of trusting Subchunk2Size in the header
     file.seekg(0, std::ios::end);
     uint32_t fileSize = static_cast<uint32_t>(file.tellg());
     totalDataSize = (fileSize > 44) ? (fileSize - 44) : 0;
     
-    // 回到数据起始位置
+    
     file.clear();
     file.seekg(44, std::ios::beg);
 
@@ -44,17 +44,17 @@ void WavDecoder::seekTo(float progress) {
 
     progress = std::clamp(progress, 0.0f, 1.0f);
     
-    // 计算目标字节：必须相对于数据区(44字节后)进行偏移
+    //  Calculate the target byte offset relative to the data section (after 44-byte header)
     uint32_t targetOffset = static_cast<uint32_t>(totalDataSize * progress);
     
-    // 🌟 关键：4字节对齐 (16bit立体声 = 4 bytes/frame)
+    //  Align to 4 bytes (16-bit stereo = 4 bytes per frame)
     targetOffset = (targetOffset / 4) * 4;
     
     uint32_t finalPos = 44 + targetOffset;
 
     file.clear();
     file.seekg(finalPos, std::ios::beg);
-    std::cout << "⏩ 进度跳转: " << (progress * 100.0f) << "% (字节位置: " << finalPos << ")" << std::endl;
+    std::cout << "⏩ Seek: " << (progress * 100.0f) << "% (byte position: " << finalPos << ")" << std::endl;
 }
 
 double WavDecoder::getCurrentPosition() {
