@@ -7,12 +7,13 @@
 #include <vector>
 #include "AudioSource.hpp"
 
-// 提前告诉编译器：外面有一个叫 HardwareController 的类
+// Forward declaration: there is a class named HardwareController defined elsewhere
 class HardwareController; 
 
 class AudioEngine {
 public:
-    // 🌟 核心修复：这里现在允许接收两个参数了！（第二个参数默认是 nullptr，防止报错）
+    //Core fix: this constructor now accepts two parameters
+    //(the second parameter defaults to nullptr to avoid errors)
     AudioEngine(AudioSource* src, HardwareController* hw = nullptr);
     ~AudioEngine();
 
@@ -25,7 +26,7 @@ private:
     void recoverFromError(int err);
 
     AudioSource* source;
-    HardwareController* hwController; // 存放硬件管家的名片
+    HardwareController* hwController; // Stores the reference to the hardware controller
     snd_pcm_t* pcmHandle;
     std::thread playbackThread;
     std::atomic<bool> running;
