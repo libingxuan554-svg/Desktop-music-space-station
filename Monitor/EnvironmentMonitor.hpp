@@ -16,36 +16,13 @@
  */
 class EnvironmentMonitor {
 public:
-    /**
-     * @brief Constructor for EnvironmentMonitor.
-     */
     EnvironmentMonitor();
-
-    /**
-     * @brief Destructor for EnvironmentMonitor. Ensures safe thread cleanup.
-     */
     ~EnvironmentMonitor();
-
-    /**
-     * @brief Starts the background data acquisition thread.
-     */
     void start();
-
-    /**
-     * @brief Safely stops the background data acquisition thread.
-     */
     void stop();
-
-    /**
-     * @brief The sole safe interface for external threads (e.g., UI) to fetch the latest aggregated data.
-     * @return System::EnvironmentStatus A thread-safe copy of the latest system and environmental metrics.
-     */
     System::EnvironmentStatus getLatestStatus();
 
 private:
-     /**
-     * @brief Main realtime event loop running in the background thread.
-     */
     void monitorLoop();
 
     // Specific data acquisition handlers (Private to enforce encapsulation)
