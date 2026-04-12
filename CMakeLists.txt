@@ -2,27 +2,39 @@ cmake_minimum_required(VERSION 3.10)
 project(DesktopMusicStation)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 1. 查找系统依赖
+# 1. 查找依赖
 find_package(ALSA REQUIRED)
 find_package(Threads REQUIRED)
 
-message(STATUS " 准备开始总装空间站...")
+message(STATUS "🛠️ 正在总装空间站...")
 
-# 2. 引入两个零件厂 (执行各自目录的 CMakeLists)
+# 2. 编译子模块
 add_subdirectory(MPM)
 add_subdirectory(UI)
-
-# 3. 总装厂开始工作：在根目录使用 main.cpp 生成主程序
+# Monitor 目录若只有 cpp/hpp 则直接编译
 add_executable(MusicStation main.cpp Monitor/EnvironmentMonitor.cpp)
 
-# 4. 把零件和系统库“焊接”到主程序上
-target_link_libraries(MusicStation PRIVATE MPM_Module UI_Module ALSA::ALSA Threads::Threads)
+# 3. 链接所有模块
+target_link_libraries(MusicStation PRIVATE 
+    MPM_Module 
+    UI_Module 
+    ALSA::ALSA 
+    Threads::Threads
+    stdc++fs
+)
 
-# 5. 告诉 main.cpp 去哪里找头文件 (包含了根目录、MPM的include 和 UI的include)
+# 4. 头文件索引
 target_include_directories(MusicStation PRIVATE 
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/MPM/include 
     ${CMAKE_SOURCE_DIR}/UI/include
     ${CMAKE_SOURCE_DIR}/Monitor
+)
+
+# 5. 🌟 路径自动对齐（加分项）：自动把 assets 拷贝到 build，防止老师跑不起来
+add_custom_command(TARGET MusicStation POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/UI/Renfer ${CMAKE_BINARY_DIR}/UI/Renfer
 )
