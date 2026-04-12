@@ -16,8 +16,6 @@ namespace fs = std::filesystem;
  * @brief Constructor for EnvironmentMonitor.
  * * Sets initial safe default values to prevent the UI from reading garbage data before the first update.
  * Design rationale (SOLID Principle): Adheres to the Single Responsibility Principle (SRP). 
- * This class is solely responsible for safely gathering, parsing, and encapsulating environmental data, 
- * completely separated from UI rendering or data transport logic.
  */
 EnvironmentMonitor::EnvironmentMonitor()
     : isRunning(false), prevTotalCpuTime(0), prevIdleCpuTime(0), weatherUpdateCounter(0) {
@@ -56,12 +54,6 @@ void EnvironmentMonitor::stop() {
     }
 }
 
-/**
- * @brief Safely retrieves the latest encapsulated environment data.
- * * @return System::EnvironmentStatus The latest snapshot of system and environmental metrics.
- * @note This acts as a safe Getter interface. It utilizes std::mutex to prevent race conditions,
- * ensuring strict encapsulation and safe data management across threads.
- */
 System::EnvironmentStatus EnvironmentMonitor::getLatestStatus() {
     std::lock_guard<std::mutex> lock(dataMutex);
     return currentStatus; // Thread-safe copy of the data
@@ -71,8 +63,6 @@ System::EnvironmentStatus EnvironmentMonitor::getLatestStatus() {
  * @brief Main realtime event loop running in a dedicated thread.
  * * CRITICAL REALTIME DESIGN: This loop uses Linux timerfd to achieve strict Blocking I/O.
  * It converts standard sleep-polling into pure kernel event-driven interrupts. 
- * This completely avoids CPU-wasting polling loops or blocking delays (sleep), adhering
- * perfectly to production-level realtime coding guidelines.
  */
 void EnvironmentMonitor::monitorLoop() {
     // 1. Request a high-precision hardware timer from the Linux kernel
