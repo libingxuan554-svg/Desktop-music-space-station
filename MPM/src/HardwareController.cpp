@@ -53,7 +53,6 @@ void HardwareController::updateLighting(const std::vector<float>& spectrum) {
     }
     m_ledCV.notify_one(); // Wake up the sleeping LED worker
 }
-}
 
 void HardwareController::ledWorker() {
     while (m_ledRunning) {
