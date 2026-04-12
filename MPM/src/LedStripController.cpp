@@ -11,7 +11,7 @@
 #include <chrono>
 
 // ==========================================
-// 1. 底层硬件驱动 (保持你完美的 8MHz 时序)
+// 1. Low-level hardware driver(keeps your precise 8 MHz timing intact)
 // ==========================================
 
 bool LedStripController::initialize(const char* device, uint32_t speed) {
@@ -62,13 +62,13 @@ void LedStripController::sendLeds(const std::vector<uint32_t>& colors) {
 }
 
 // ==========================================
-// 2. 视觉算法：专业级起批与拖尾特效
+// 2. Visual algorithm: professional burst and trailing effects
 // ==========================================
 
 void LedStripController::updateFromSpectrum(const std::vector<float>& spectrum) {
     static auto lastUpdate = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();
-    // 锁定最高 30 帧，保证视觉连贯性
+    // Limit the refresh rate to 30 FPS for smooth visual output
     if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdate).count() < 33) {
         return; 
     }
@@ -76,15 +76,15 @@ void LedStripController::updateFromSpectrum(const std::vector<float>& spectrum) 
 
     const int COLOR_GROUPS = 7;
     
-    // 🌟 视觉优化 1：全局降低 70% 的绝对亮度，拒绝刺眼！(数值最高才 45)
+    // Visual optimization 1:reduce the overall absolute brightness by 70% to avoid harsh glare(maximum channel value is only 45)
     const std::vector<uint32_t> palette = {
-        makeGRB(0,   30,  30),   // 紫
-        makeGRB(0,   0,   45),   // 蓝
-        makeGRB(35,  0,   35),   // 青
-        makeGRB(35,  0,   0),    // 绿
-        makeGRB(35,  35,  0),    // 黄
-        makeGRB(20,  45,  0),    // 橙
-        makeGRB(0,   45,  0)     // 红
+        makeGRB(0,   30,  30),   // Purple
+        makeGRB(0,   0,   45),   // Blue
+        makeGRB(35,  0,   35),   // Cyan
+        makeGRB(35,  0,   0),    // Green
+        makeGRB(35,  35,  0),    // Yellow
+        makeGRB(20,  45,  0),    // Orange
+        makeGRB(0,   45,  0)     // Red
     };
 
     std::vector<uint32_t> leds(LED_COUNT, 0);
@@ -123,13 +123,13 @@ void LedStripController::updateFromSpectrum(const std::vector<float>& spectrum) 
         m_smoothedSpectrum.assign(COLOR_GROUPS, 0.0f);
     }
 
-    // 🌟 视觉优化 2：非对称平滑算法 (Attack & Decay)
+    // Visual optimization 2:asymmetric smoothing algorithm (Attack & Decay)
     for (int i = 0; i < COLOR_GROUPS; ++i) {
         if (groups[i] > m_smoothedSpectrum[i]) {
-            // 鼓点袭来：80% 权重接受新数据，瞬间爆发！
+            //  Beat hits: accept new data with 80% weight for an instant burst
             m_smoothedSpectrum[i] = 0.20f * m_smoothedSpectrum[i] + 0.80f * groups[i];
         } else {
-            // 声音减弱：保留 85% 的老数据，制造缓慢变暗的呼吸拖尾感！
+            //Sound fades: keep 85% of old data to create a slow dimming tail effect
             m_smoothedSpectrum[i] = 0.85f * m_smoothedSpectrum[i] + 0.15f * groups[i];
         }
     }
