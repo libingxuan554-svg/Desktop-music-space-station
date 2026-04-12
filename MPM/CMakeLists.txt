@@ -1,7 +1,7 @@
 find_package(ALSA REQUIRED)
 find_package(Threads REQUIRED)
 
-# 把音频引擎和同学的硬件灯效打包成一个超级模块
+# Package the audio engine and the hardware LED effects into one combined module
 add_library(MPM_Module
     src/RingBuffer.cpp
     src/WavDecoder.cpp
