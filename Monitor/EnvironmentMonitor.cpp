@@ -187,7 +187,7 @@ void EnvironmentMonitor::updateWeather() {
     // Convert to lowercase uniformly for easier keyword matching
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);
 
-    // 1.Parse the weather code (smart fuzzy matching)
+    // 1.Parse the weather code 
     int code = 1; // Default to CLOUDY
     if (result.find("clear") != std::string::npos || result.find("sun") != std::string::npos) code = 0;
     else if (result.find("cloud") != std::string::npos || result.find("overcast") != std::string::npos) code = 1;
