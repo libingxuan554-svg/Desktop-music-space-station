@@ -16,7 +16,7 @@ public:
     void seekTo(float progress);
     
     bool seekToTime(double seconds);
-    double getCurrentPosition();   // 注意：去掉了 const，修复 tellg 报错
+    double getCurrentPosition();  
     double getTotalDuration() const;
 
 private:
@@ -26,4 +26,4 @@ private:
     int channels;
 };
 
-#endif // <--- 必须有这一行！
+#endif 
