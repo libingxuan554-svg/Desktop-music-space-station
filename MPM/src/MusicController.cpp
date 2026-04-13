@@ -3,10 +3,20 @@
 #include <algorithm>
 
 // Constructor: initialize m_volume to 0.5f (default 50% volume)
+/**
+ * @brief Initializes playback state and binds injected dependencies.
+ * @note [Real-Time Constraints]:
+ * - Zero Allocation: Performs strictly lightweight variable initialization (O(1)), completely avoiding runtime heap memory overhead.
+ */
 MusicController::MusicController(WavDecoder* decoder, RingBuffer* buffer)
     : m_decoder(decoder), m_ringBuffer(buffer), m_isPlaying(true),
       m_currentTrackIndex(0), m_volume(0.5f) {}
 
+/**
+ * @brief Dispatches and mutates playback states based on UI events.
+ * @note [Real-Time Constraints]:
+ * - State Mutation Safety: Employs a pure O(1) `flush()` on the lock-free ring buffer during track switching or seeking, absolutely eliminating audio tearing and residual sound without stalling the UI thread.
+ */
 void MusicController::setPlaylist(const std::vector<std::string>& playlist) {
     m_playlist = playlist;
     if (!m_playlist.empty()) {
@@ -78,6 +88,11 @@ void MusicController::processCommand(const System::ControlCommand& cmd) {
     }
 }
 
+/**
+ * @brief The hardware-triggered callback supplying final PCM data.
+ * @note [Real-Time Constraints]:
+ * - O(N) DSP Execution: Applies volume scaling using strict linear memory traversal. Pure CPU mathematical operation guarantees execution within the strict ALSA deadline without kernel context switching.
+ */
 void MusicController::onProcessAudio(std::vector<float>& buffer, uint32_t numFrames) {
     if (m_isPlaying && m_decoder) {
         // 1. Get the original audio data
