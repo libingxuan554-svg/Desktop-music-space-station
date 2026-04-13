@@ -10,7 +10,7 @@
 # # [REAL-TIME COMPLIANCE]:
 # # Mandates dependency on ALSA audio library and POSIX threads, providing OS-level support for low-level hardware interrupts, DMA transfers, and zero-polling multi-threaded architecture.
 # ==========================================
-# 1 1. Find system dependencies
+# 1 Find system dependencies
 find_package(ALSA REQUIRED)    # Find ALSA (Advanced Linux Sound Architecture) core driver library
 find_package(Threads REQUIRED) #  Find system multi-threading library support (pthread)
 
