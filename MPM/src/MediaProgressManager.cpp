@@ -1,10 +1,18 @@
 #include "../include/MediaProgressManager.hpp"
 #include <iostream>
 
-// Constructor: bind the decoder instance
+/**
+ * @brief Initializes the manager via Dependency Injection.
+ * @note [Real-Time Constraints]:
+ * - Zero Allocation: Binds the existing decoder instance directly, strictly avoiding dynamic heap allocation (`new`/`delete`) during instantiation.
+ */
 MediaProgressManager::MediaProgressManager(WavDecoder* dec) : decoder(dec) {}
 
-// Handle progress control commands from the UI
+/**
+ * @brief Dispatches UI progress commands to the underlying decoder.
+ * @note [Real-Time Constraints]:
+ * - O(1) Delegation: Instantly forwards seek operations without executing the heavy disk I/O itself, ensuring the UI thread never blocks or freezes.
+ */
 bool MediaProgressManager::processCommand(const System::ControlCommand& cmd) {
     if (!decoder) return false;
 
@@ -22,7 +30,11 @@ bool MediaProgressManager::processCommand(const System::ControlCommand& cmd) {
     return false;
 }
 
-// Core function: inject time data for UI progress display
+/**
+ * @brief Injects deterministic playback time data into the UI payload.
+ * @note [Real-Time Constraints]:
+ * - Wait-Free Read: Polls the current position in strict O(1) time. Guarantees that the 30FPS UI renderer never stalls waiting for lower-level mutexes.
+ */
 void MediaProgressManager::injectTimeData(System::PlaybackStatus& status) {
     if (!decoder) return;
 
