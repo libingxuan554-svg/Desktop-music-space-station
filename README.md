@@ -93,7 +93,7 @@ JiaNan Liu — Hardware Programmer / BSP & Driver Integration
 ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 
 ## 8. System Showcase & Conclusion 
-<img width="697" height="818" alt="image" src="https://github.com/user-attachments/assets/f5a00f56-5a8a-46cd-9a5a-1e881c332d13" />
+<img width="450" height="520" alt="image" src="https://github.com/user-attachments/assets/f5a00f56-5a8a-46cd-9a5a-1e881c332d13" />
 
 *(Physical Prototype: Integrating C++17 execution, Framebuffer UI, ALSA audio via Marshall speaker, WS2812 RGB Strip, and DS18B20 thermal probe.)
 
