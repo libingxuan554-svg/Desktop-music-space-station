@@ -9,6 +9,11 @@ WavDecoder::~WavDecoder() {
     if (file.is_open()) file.close();
 }
 
+/**
+ * @brief Opens the WAV file and safely parses the RIFF/PCM header.
+ * @note [Real-Time Constraints]:
+ * - Blocking I/O: Contains inherently non-deterministic disk I/O operations. MUST be executed asynchronously or during the pre-load phase, strictly before the real-time ALSA thread begins.
+ */
 bool WavDecoder::open(const std::string& path) {
     if (file.is_open()) {
         file.close();
@@ -39,6 +44,12 @@ bool WavDecoder::open(const std::string& path) {
     return true;
 }
 
+/**
+ * @brief Calculates and mutates the file read pointer based on playback progress.
+ * @note [Real-Time Constraints]:
+ * - O(1) Pointer Mutation: Fast `seekg` operation.
+ * - Memory Alignment: Strictly enforces 4-byte block alignment (16-bit stereo) to categorically prevent audio tearing, static noise, or channel phase inversion during seeking.
+ */
 void WavDecoder::seekTo(float progress) {
     if (!file.is_open() || totalDataSize == 0) return;
 
@@ -76,6 +87,11 @@ bool WavDecoder::seekToTime(double seconds) {
     return true;
 }
 
+/**
+ * @brief Reads raw PCM bytes and normalizes them to interleaved floats (Producer).
+ * @note [Real-Time Constraints]:
+ * - I/O Jitter Absorption: Since disk reads involve unpredictable latency, this function operates as a background producer. It continuously pre-fetches data into the Lock-Free RingBuffer, completely absorbing disk jitter and shielding the hardware playback thread.
+ */
 void WavDecoder::onProcessAudio(std::vector<float>& buffer, uint32_t numFrames) {
     if (!file.is_open() || file.eof()) {
         std::fill(buffer.begin(), buffer.end(), 0.0f);
