@@ -77,7 +77,7 @@ ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 A `setup.sh` script is provided to configure the environment automatically. Execute the following commands in your Raspberry Pi terminal:
 
 ```bash
-//1. Clone the repository (Replace with your actual GitHub repository URL)
+#1. Clone the repository (Replace with your actual GitHub repository URL)
 git clone [https://github.com/libingxuan554-svg/Desktop-music-space-station.git]
 cd Desktop-music-space-station
 
