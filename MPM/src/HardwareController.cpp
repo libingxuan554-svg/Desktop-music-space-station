@@ -21,7 +21,7 @@ bool HardwareController::initLedStrip() {
     if (m_ledStripInitialized) return true;
 
     if (!m_ledStrip.initialize()) {
-        std::cerr << "LED SPI 初始化失败" << std::endl;
+        std::cerr << "LED SPI initial failure" << std::endl;
         return false;
     }
     m_ledStripInitialized = true;
