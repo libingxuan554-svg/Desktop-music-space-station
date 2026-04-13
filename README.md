@@ -85,13 +85,14 @@ cd Desktop-music-space-station
 chmod +x setup.sh
 ./setup.sh
 
-3. Create the build directory and compile
-mkdir build && cd build
-cmake ..
-make -j4
+3. setup coding environment
+./setup.sh
+sudo systemctl stop lightdm
 
-4. Run the executable (sudo required for raw Framebuffer, input, and SPI access)
-sudo ./MusicStation
+4. coding & run
+cd ~/Desktop-music-space-station/build && rm -rf * && cmake .. && make MusicStation -j4
+export XDG_RUNTIME_DIR=/run/user/1000 && sudo -E ALSA_LOG_LEVEL=quiet PULSE_SERVER=unix:/run/user/1000/pulse/native ./MusicStation
+
 
 
 Glasgow, Spring 2026
