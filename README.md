@@ -4,7 +4,7 @@
 > Engineered for **ENG 5220: Real Time Embedded Programming**, University of Glasgow.
 > 
 > This C++17-powered terminal is designed to operate under rigorous real-time computing constraints, guaranteeing glitch-free audio playback and a deterministic 30FPS UI rendering cycle. By integrating a lock-free audio decoding engine with a strict Zero-Polling architecture, the system eliminates common embedded bottlenecks like audio stutter and high CPU idling, ensuring that hardware resources are utilized with maximum efficiency and precision.
-> <img width="755" height="549" alt="image" src="https://github.com/user-attachments/assets/9db4cddf-4f23-42e4-8c53-6b281f544b31" />
+> <img width="375" height="275" alt="image" src="https://github.com/user-attachments/assets/9db4cddf-4f23-42e4-8c53-6b281f544b31" />
 
 
 ## 1.Design Requirements & Core Architectural Highlights (Real-Time Compliance)
