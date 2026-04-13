@@ -1,71 +1,87 @@
 #ifndef SYSTEM_INTERFACES_HPP
 #define SYSTEM_INTERFACES_HPP
 
-#include <string>
-#include <vector>
-#include <cstdint>
+#include <string>    //  Include standard string class
+#include <vector>    //  Include dynamic array container
+#include <cstdint>   //  Include standard integer definitions
 
-namespace System {
+namespace System { //  Define global system-level communication namespace
 
     /**
-     * @brief 1. 指令接口 (UI -> 音频/系统逻辑)
-     * 用于发送控制命令。UI 模块是发布者 (Publisher)。
+     * @enum CommandType
+     * @brief Command interface (UI -> Audio/System logic)
+     * Used to send control commands. The UI module is the Publisher.
+     * @note [Architecture / SOLID]:
+     * Dependency Inversion Principle (DIP): Defines abstract control contracts, completely decoupling UI components from low-level hardware control.
      */
     enum class CommandType {
-        PLAY_PAUSE,
-        NEXT_TRACK,
-        PREV_TRACK,
-        VOLUME_UP,
-        VOLUME_DOWN,
-        SELECT_SONG,   // 配合 intValue 使用 (歌曲索引)
-        SEEK_FORWARD,  // 快进
-        SEEK_BACKWARD, // 快退
-        ENTER_STANDBY  // 进入待机模式
-    };
-
-    struct ControlCommand {
-        CommandType type;
-        int32_t intValue = 0;   // 辅助参数，如音量值或歌曲 ID
-        float floatValue = 0.0f; 
+        PLAY_PAUSE,    // Play or pause toggle
+        NEXT_TRACK,    // Switch to next track
+        PREV_TRACK,    // Switch to previous track
+        VOLUME_UP,     // Increase volume
+        VOLUME_DOWN,   // Decrease volume
+        SELECT_SONG,   // Used with intValue (song index)
+        SEEK_FORWARD,  // Fast forward progress
+        SEEK_BACKWARD, // Rewind progress
+        ENTER_STANDBY  // Enter standby mode
     };
 
     /**
-     * @brief 2. 播放状态接口 (音频 -> UI)
-     * UI 模块通过订阅此数据来更新歌名、进度条等。
+     * @struct ControlCommand
+     * @brief Entity data packet carrying control commands
+     */
+    struct ControlCommand {
+        CommandType type;        // Command type enumeration
+        int32_t intValue = 0;    // Auxiliary parameter, such as volume value or song ID
+        float floatValue = 0.0f; // Floating-point auxiliary parameter, used for percentage progress, etc.
+    };
+
+    /**
+     * @struct PlaybackStatus
+     * @brief Playback status interface (Audio -> UI)
+     * The UI module subscribes to this data to update song names, progress bars, etc.
+     * @note [Architecture / SOLID]:
+     * Single Responsibility Principle (SRP): Acts as a pure data container (POD) responsible only for passing state synchronization, containing no business processing logic.
      */
     struct PlaybackStatus {
-        std::string songName;
-        std::string artist;
-        int32_t currentPosition; // 当前播放秒数
-        int32_t totalDuration;   // 总时长秒数
-        bool isPlaying;
-        int32_t volume;          // 当前音量 (0-100)
-        //存放所有扫描到的本地歌曲名字
-        std::vector<std::string> playlist;
-
+        std::string songName;    // Name of the currently playing song
+        std::string artist;      // Artist name information
+        int32_t currentPosition; // Current playback position in seconds
+        int32_t totalDuration;   // Total duration in seconds
+        bool isPlaying;          // Whether it is currently in an active playback state
+        int32_t volume;          // Current real hardware volume (0-100)
+        
+        // Store all scanned local song names
+        std::vector<std::string> playlist; // Global music playlist collection
     };
 
     /**
-     * @brief 3. 实时音频流接口 (音频 -> UI/灯带)
-     * 用于频谱动画和灯带律动。高频更新。
+     * @struct AudioVisualData
+     * @brief Real-time audio stream interface (Audio -> UI/LedStrip)
+     * Used for spectrum animation and LED strip rhythm. High-frequency updates.
+     * @note [Real-Time Constraints]:
+     * // [REAL-TIME COMPLIANCE]:
+     * // This structure is written out at high frequency by the audio interrupt thread; its extremely flat design ensures extreme O(1) efficiency for the main render thread to fetch data.
      */
     struct AudioVisualData {
-        float overallIntensity;       // 整体响度 (0.0-1.0)，对接你的 renderMirrorEqualizer
-        std::vector<float> frequencies; // 频段数据（如16个频段），用于高级频谱图
+        float overallIntensity;         // Overall loudness (0.0-1.0), interfaces with your renderMirrorEqualizer
+        std::vector<float> frequencies; // Frequency band data (e.g., 16 bands), used for advanced spectrograms
     };
 
     /**
-     * @brief 4. 环境数据接口 (传感器 -> UI/系统逻辑)
-     * 用于待机页面的仪表盘显示。
+     * @struct EnvironmentStatus
+     * @brief Environment data interface (Sensor -> UI/System logic)
+     * Used for dashboard display on the standby page.
      */
     struct EnvironmentStatus {
-        float temperature;     // 预留给您的 env 模块
-        float humidity;        // 预留给您的 env 模块
-        int weatherCode;       // 预留给您的网络天气模块 (如 0=晴, 1=多云, 2=雨)
-        int cpuLoadPercent;    // 实时 CPU 负载
-        int memUsagePercent;   // 实时内存使用率
-        uint32_t lux;       // 补充：光照强度（可用于自动调节 UI 亮度）
+        float temperature;     // Reserved for your env module (Physical room temperature)
+        float humidity;        // Reserved for your env module (Physical humidity)
+        int weatherCode;       // Reserved for your network weather module (e.g., 0=Sunny, 1=Cloudy, 2=Rainy)
+        int cpuLoadPercent;    // Real-time CPU load percentage
+        int memUsagePercent;   // Real-time memory usage percentage
+        uint32_t lux;          // Addition: Light intensity (can be used to auto-adjust UI brightness)
     };
-}
+
+} // namespace System
 
 #endif
