@@ -10,7 +10,17 @@
 // ==========================================
 // 1. Core algorithm: Goertzel spectral extraction
 // ==========================================
-float goertzelMagnitude(int numSamples, int targetFreq, int sampleRate, const float* data) {
+
+/**
+ * @brief Extracts specific frequency magnitude using the Goertzel algorithm.
+ * @param[in] numSamples Number of audio samples to process.
+ * @param[in] targetFreq The specific frequency (Hz) to analyze.
+ * @param[in] sampleRate The audio sample rate (Hz).
+ * @param[in] data Pointer to the mono audio sample array.
+ * @return The magnitude of the target frequency.
+ * @note [Real-Time Constraints]:
+ * - Execution Determinism: O(N) time complexity. Bypasses heavy FFT overhead by isolating specific frequencies, ensuring the audio thread never misses a deadline.
+ */ float goertzelMagnitude(int numSamples, int targetFreq, int sampleRate, const float* data) {
     float k = 0.5f + ((float)numSamples * targetFreq) / sampleRate;
     float omega = (2.0f * M_PI * k) / numSamples;
     float sine = std::sin(omega);
@@ -79,6 +89,12 @@ void AudioEngine::recoverFromError(int err) {
 // ==========================================
 // 3. Core audio pipeline
 // ==========================================
+/**
+ * @brief Executes the primary audio processing and hardware dispatch pipeline.
+ * @note [Real-Time Constraints]:
+ * - Hardware Sync (Zero-Polling): Native blocking via `snd_pcm_writei`. The thread sleeps until the ALSA hardware buffer requires data, strictly guaranteeing 0% CPU spin-locking.
+ * - Non-Blocking Dispatch: Calls `hwController->updateLighting()` asynchronously without waiting for slow SPI LED writes.
+ */
 void AudioEngine::playbackWorker() {
     const int periodSize = 1024;
     const int sampleRate = 44100;
