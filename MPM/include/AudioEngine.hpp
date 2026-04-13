@@ -10,10 +10,24 @@
 // Forward declaration: there is a class named HardwareController defined elsewhere
 class HardwareController; 
 
+/**
+ * @class AudioEngine
+ * @brief Core ALSA audio playback engine managing the hardware audio buffer.
+ * @note [Architecture / SOLID]:
+ * - Single Responsibility Principle (SRP): Exclusively manages the ALSA hardware playback lifecycle. It delegates file parsing and decoding to external modules.
+ * - Dependency Inversion Principle (DIP): Depends entirely on the abstract `AudioSource` interface to fetch PCM data, completely decoupling it from specific file formats (e.g., WAV).
+ */
 class AudioEngine {
 public:
     //Core fix: this constructor now accepts two parameters
     //(the second parameter defaults to nullptr to avoid errors)
+     /**
+ * @brief Constructs the audio engine with injected dependencies.
+ * @param[in] src Pointer to the abstract audio source interface (provides PCM data).
+ * @param[in] hw Optional pointer to the hardware controller (e.g., for LED synchronization).
+ * @note [Real-Time Constraints]:
+ * - Initialization Phase: Executes outside the real-time audio loop. Employs Dependency Injection (DI) to avoid dynamic memory allocation or complex instantiations during runtime.
+ */
     AudioEngine(AudioSource* src, HardwareController* hw = nullptr);
     ~AudioEngine();
 
