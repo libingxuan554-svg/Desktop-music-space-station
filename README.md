@@ -40,7 +40,39 @@ This project strictly adheres to **AUTOSAR C++14/17 guidelines** for resource ma
   * `stdc++fs` (C++17 Filesystem)
   * `libfftw3-dev` / `curl` (For advanced monitoring and weather fetching)
   
-##  4. Build and Run Instructions
+##  4. Directory Structure & Modularity
+
+The project is modularized to adhere to the Single Responsibility Principle:
+
+/UI: Contains the strictly decoupled Framebuffer memory-mapping driver, non-blocking touch event parser, and stateless .UIRenderer
+
+/MPM (Media Progress Manager): Handles WAV binary decoding, Lock-Free RingBuffers, Goertzel spectrum extraction, and the blocking ALSA Audio Engine.
+
+/Monitor: Background daemons utilizing  to gather real-time system load, 1-Wire sensor temperatures, and network weather.timerfd
+
+/assets: Houses  music binaries..wav
+
+/UI/Renfer: Houses pre-rendered  UI backgrounds loaded into RAM at startup to achieve Zero Disk I/O during runtime..bmp
+
+## 5. Engineering Workflow & Version Control
+Test-Driven Development (TDD): During the actual development process, a significant amount of work was focused on the Raspberry Pi Linux system, where code was written, iterated, and optimized through continuous interaction with the hardware. Business logic, coordinate clipping algorithms, and state machines were verified independently through the physical hardware.
+
+Version Control: Continuous integration was maintained throughout the development cycle. The Git commit history reflects a steady, iterative refinement process—from eliminating initial polling loops to implementing the final event-driven lock-free architecture—demonstrating a professional software engineering lifecycle rather than a single bulk upload.
+
+## 6. Team 15 & Contributions
+This project was collaboratively engineered by Team 15:
+
+BingXuan Li — Team Leader / System Architect
+
+Yang Zhang — GUI Programmer / Data Systems Developer
+
+MingCong Xu — Audio Systems Engineer / MPM Core Developer
+
+JiaNan Liu — Hardware Programmer / BSP & Driver Integration
+
+ZiKai Ma — Hardware Programmer / BSP & Driver Integration
+
+## 7. Build and Run Instructions
 
 A `setup.sh` script is provided to configure the environment automatically. Execute the following commands in your Raspberry Pi terminal:
 
@@ -61,36 +93,5 @@ make -j4
 4. Run the executable (sudo required for raw Framebuffer, input, and SPI access)
 sudo ./MusicStation
 
-##  5. Directory Structure & Modularity
-
-The project is modularized to adhere to the Single Responsibility Principle:
-
-/UI: Contains the strictly decoupled Framebuffer memory-mapping driver, non-blocking touch event parser, and stateless .UIRenderer
-
-/MPM (Media Progress Manager): Handles WAV binary decoding, Lock-Free RingBuffers, Goertzel spectrum extraction, and the blocking ALSA Audio Engine.
-
-/Monitor: Background daemons utilizing  to gather real-time system load, 1-Wire sensor temperatures, and network weather.timerfd
-
-/assets: Houses  music binaries..wav
-
-/UI/Renfer: Houses pre-rendered  UI backgrounds loaded into RAM at startup to achieve Zero Disk I/O during runtime..bmp
-
-## 6. Engineering Workflow & Version Control
-Test-Driven Development (TDD): During the actual development process, a significant amount of work was focused on the Raspberry Pi Linux system, where code was written, iterated, and optimized through continuous interaction with the hardware. Business logic, coordinate clipping algorithms, and state machines were verified independently through the physical hardware.
-
-Version Control: Continuous integration was maintained throughout the development cycle. The Git commit history reflects a steady, iterative refinement process—from eliminating initial polling loops to implementing the final event-driven lock-free architecture—demonstrating a professional software engineering lifecycle rather than a single bulk upload.
-
-## 7. Team 15 & Contributions
-This project was collaboratively engineered by Team 15:
-
-BingXuan Li — Team Leader / System Architect
-
-Yang Zhang — GUI Programmer / Data Systems Developer
-
-MingCong Xu — Audio Systems Engineer / MPM Core Developer
-
-JiaNan Liu — Hardware Programmer / BSP & Driver Integration
-
-ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 
 Glasgow, Spring 2026
