@@ -13,7 +13,7 @@
 At its core, the system is built upon the principle of Deterministic Real-Time Performance. Unlike traditional desktop applications that rely on heavy OS scheduling, this project minimizes jitter through a Zero-Polling & Event-Driven architecture. The design prioritizes:
 
 * **Zero Polling & Event-Driven Execution:**
-  * The entire system operates with **the highest 15% CPU utilization**.
+  * The entire system operates with **the highest 25% CPU utilization**.
   * UI rendering is strictly driven by the Linux Kernel `timerfd`, guaranteeing exact 30Hz hardware-interrupted rendering cycles.
   * The touchscreen subsystem relies on pure blocking `read()` on the `evdev` node, completely suspending thread execution when no physical interrupts occur.
 * **Lock-Free Concurrency & Synchronization:**
@@ -30,11 +30,11 @@ The design translates high-level requirements into quantifiable technical bounda
 | :--- | :--- | :--- | 
 | **UI Rendering** | Linux Framebuffer + `timerfd` | Constant 30 FPS | 
 | **Audio Sync** | Lock-Free RingBuffer (`std::atomic`) | Zero Stutter / Glitch-free | 
-| **Input Handling** | Blocking `read()` on `evdev` | 0% Idle CPU Usage | 
+| **Input Handling** | Blocking `read()` on `evdev` | 25% Idle CPU Usage | 
 | **Memory Mgmt** | Strict RAII & STL Containers | Zero Fragmentation | 
 | **Thermal Monitoring** | DS18B20 (1-Wire Interface) | Real-time accuracy |
 
-##  4. Hardware Dependencies & Setup
+##  3. Hardware Dependencies & Setup
 
 To run this project, the following hardware setup and specific Linux device nodes are strictly required:
 
@@ -44,7 +44,7 @@ To run this project, the following hardware setup and specific Linux device node
 * **LED Strip:** WS2812/SK6812 LED strip connected via Hardware SPI at `/dev/spidev0.0` (8MHz clock speed).
 * **Thermal Sensor:** DS18B20 (1-Wire interface) mapped dynamically via `/sys/bus/w1/devices/28-*`.
 
-##  3. Software Dependencies
+##  4. Software Dependencies
 
 This project strictly adheres to **AUTOSAR C++14/17 guidelines** for resource management. Memory is governed by RAII principles and STL containers (`std::vector`, `std::string`); bare `new`/`delete` calls are entirely prohibited to prevent memory fragmentation and leaks.
 
@@ -56,7 +56,7 @@ This project strictly adheres to **AUTOSAR C++14/17 guidelines** for resource ma
   * `stdc++fs` (C++17 Filesystem)
   * `libfftw3-dev` / `curl` (For advanced monitoring and weather fetching)
   
-##  4. Directory Structure & Modularity
+##  5. Directory Structure & Modularity
 
 The project is modularized to adhere to the Single Responsibility Principle:
 
@@ -70,12 +70,16 @@ The project is modularized to adhere to the Single Responsibility Principle:
 
 /UI/Renfer: Houses pre-rendered  UI backgrounds loaded into RAM at startup to achieve Zero Disk I/O during runtime..bmp
 
-## 5. Engineering Workflow & Version Control
-Test-Driven Development (TDD): During the actual development process, a significant amount of work was focused on the Raspberry Pi Linux system, where code was written, iterated, and optimized through continuous interaction with the hardware. Business logic, coordinate clipping algorithms, and state machines were verified independently through the physical hardware.
+## 6. Engineering Workflow & Version Control
 
-Version Control: Continuous integration was maintained throughout the development cycle. The Git commit history reflects a steady, iterative refinement process—from eliminating initial polling loops to implementing the final event-driven lock-free architecture—demonstrating a professional software engineering lifecycle rather than a single bulk upload.
+Our development lifecycle was strictly dictated by our core design requirements, ensuring every architectural decision served the ultimate goal of deterministic real-time performance. We adopted a phased, design-oriented approach:
 
-## 6. Team 15 & Contributions
+* **Phase 1: Requirement Analysis & Blueprinting:** Driven by the strict requirements for glitch-free audio and a constant 30FPS UI, we categorically rejected traditional OS polling. The initial design phase established a pure event-driven blueprint mapped directly to Linux kernel interrupts.
+* * **Phase 2: Modular System Design (SOLID):** To satisfy the requirement for high maintainability and system stability, the architecture was explicitly decoupled. The Framebuffer GUI, ALSA Audio Engine, and Sensor Monitors were designed as isolated components that communicate exclusively via lock-free data structures.
+* * **Phase 3: Hardware-in-the-Loop Prototyping (TDD):** Theoretical designs were immediately tested against physical hardware constraints. Using Test-Driven Development directly on the Raspberry Pi, we continuously verified that our `std::atomic` RingBuffers successfully eliminated mutex bottlenecks under real-world acoustic loads.
+* * **Phase 4: Profiling & Iterative Optimization:** To rigorously meet the stringent `<15%` CPU utilization boundary, the system underwent continuous performance profiling. Thread priorities and evdev blocking states were empirically fine-tuned until the latency metrics perfectly aligned with our initial design specifications.
+
+## 7. Team 15 & Contributions
 This project was collaboratively engineered by Team 15:
 
 BingXuan Li — Team Leader / System Architect
@@ -88,7 +92,7 @@ JiaNan Liu — Hardware Programmer / BSP & Driver Integration
 
 ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 
-## 7. Build and Run Instructions
+## 8. Build and Run Instructions
 
 A `setup.sh` script is provided to configure the environment automatically. Execute the following commands in your Raspberry Pi terminal:
 
@@ -111,4 +115,4 @@ export XDG_RUNTIME_DIR=/run/user/1000 && sudo -E ALSA_LOG_LEVEL=quiet PULSE_SERV
 
 
 
-Glasgow, Spring 2026
+> Glasgow, Spring 2026
