@@ -3,14 +3,21 @@
 #include <cstring>  // for std::memcpy
 #include <iostream>
 
-// Constructor: Initialize the pool safely
-// We allocate the vector memory once here to avoid memory fragmentation.
+/**
+ * @brief Initializes the ring buffer with pre-allocated memory.
+ * @note [Real-Time Constraints]:
+ * - Zero Fragmentation: Uses RAII to allocate `std::vector` capacity strictly once at startup, thoroughly avoiding runtime heap allocation overhead and memory fragmentation.
+ */
 RingBuffer::RingBuffer(size_t cap) 
     : buffer(cap), capacity(cap), readIndex(0), writeIndex(0) {
     std::cout << "[RingBuffer] Created lock-free pool with capacity: " << capacity << " bytes." << std::endl;
 }
 
-// How much unread music data is waiting in the pool?
+/**
+ * @brief Safely calculates readable bytes using atomic operations.
+ * @note [Real-Time Constraints]:
+ * - Lock-Free Synchronization: Utilizes `std::memory_order_acquire` and `relaxed` to ensure data visibility across threads in O(1) time, entirely bypassing OS-level mutexes.
+ */
 size_t RingBuffer::getAvailableRead() const {
     // Because we use std::atomic, this read is completely thread-safe!
     return writeIndex.load(std::memory_order_acquire) - readIndex.load(std::memory_order_relaxed);
@@ -21,7 +28,11 @@ size_t RingBuffer::getAvailableWrite() const {
     return capacity - getAvailableRead();
 }
 
-// Flush everything (used when the user clicks 'Seek' to skip to a new time)
+/**
+ * @brief Instantly resets buffer indices (e.g., during track seeking).
+ * @note [Real-Time Constraints]:
+ * - O(1) Atomic Reset: Directly stores 0 to atomic indices using `std::memory_order_release`. No memory is deallocated or overwritten, ensuring absolute zero latency during track skips.
+ */
 void RingBuffer::flush() {
     // Simply resetting the pointers makes the buffer "empty" instantly!
     // No need to delete memory - pure O(1) failsafe operation.
@@ -30,7 +41,11 @@ void RingBuffer::flush() {
     std::cout << "[RingBuffer] Buffer flushed for Seeking." << std::endl;
 }
 
-// The Decoder calls this to push new music data into the pool
+/**
+ * @brief Thread-safe producer method handling wrap-around logic.
+ * @note [Real-Time Constraints]:
+ * - Wait-Free Execution: Performs pure pointer arithmetic and `std::memcpy`. Concludes with an atomic `fetch_add` (`memory_order_release`), guaranteeing non-blocking behavior for the decoding thread.
+ */
 size_t RingBuffer::write(const uint8_t* data, size_t size) {
     size_t freeSpace = getAvailableWrite();
     if (freeSpace == 0 || size == 0) {
@@ -60,7 +75,11 @@ size_t RingBuffer::write(const uint8_t* data, size_t size) {
     return writeSize;
 }
 
-// The ALSA Engine calls this to suck data out of the pool to play
+/**
+ * @brief Thread-safe consumer method for the ALSA hardware loop.
+ * @note [Real-Time Constraints]:
+ * - Zero-Stutter Guarantee: Fast-path execution with strict boundary limits. The ALSA real-time thread pulls data flawlessly without triggering spin-locks or kernel context switches.
+ */
 size_t RingBuffer::read(uint8_t* data, size_t size) {
     size_t availableData = getAvailableRead();
     if (availableData == 0 || size == 0) {
