@@ -14,6 +14,11 @@
 // 1. Low-level hardware driver(keeps your precise 8 MHz timing intact)
 // ==========================================
 
+/**
+ * @brief Initializes the hardware SPI node via Linux ioctl.
+ * @note [Real-Time Constraints]:
+ * - Blocking I/O: Directly interacts with the Linux kernel device tree. MUST be executed exclusively during the non-real-time startup phase to prevent audio thread starvation.
+ */
 bool LedStripController::initialize(const char* device, uint32_t speed) {
     fd = open(device, O_RDWR);
     if (fd < 0) return false;
@@ -39,6 +44,11 @@ uint32_t LedStripController::makeGRB(uint8_t g, uint8_t r, uint8_t b) {
     return (g << 16) | (r << 8) | b;
 }
 
+/**
+ * @brief Transmits raw GRB color buffers to the SPI bus via bit-banging mapping.
+ * @note [Real-Time Constraints]:
+ * - O(N) Zero-Allocation: Utilizes `reserve()` to prevent dynamic memory reallocation. Fast bitwise shifts ensure synchronous hardware commit without runtime heap overhead.
+ */
 void LedStripController::sendLeds(const std::vector<uint32_t>& colors) {
     if (fd < 0) return;
     
@@ -65,6 +75,11 @@ void LedStripController::sendLeds(const std::vector<uint32_t>& colors) {
 // 2. Visual algorithm: professional burst and trailing effects
 // ==========================================
 
+/**
+ * @brief Renders the audio spectrum into a smooth LED animation.
+ * @note [Real-Time Constraints]:
+ * - Deterministic Execution: Enforces a strict 30 FPS hardware cap and an asymmetric Attack/Decay mathematical smoothing algorithm. Guarantees constant-time execution without stalling the asynchronous worker daemon.
+ */
 void LedStripController::updateFromSpectrum(const std::vector<float>& spectrum) {
     static auto lastUpdate = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();
