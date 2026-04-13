@@ -74,7 +74,7 @@ The project is modularized to adhere to the Single Responsibility Principle:
 
 Our development lifecycle was strictly dictated by our core design requirements, ensuring every architectural decision served the ultimate goal of deterministic real-time performance. We adopted a phased, design-oriented approach:
 
-* **Phase 1: Requirement Analysis & Blueprinting:** Driven by the strict requirements for glitch-free audio and a constant 30FPS UI, we categorically rejected traditional OS polling. The initial design phase established a pure event-driven blueprint mapped directly to Linux kernel interrupts.
+* * **Phase 1: Requirement Analysis & Blueprinting:** Driven by the strict requirements for glitch-free audio and a constant 30FPS UI, we categorically rejected traditional OS polling. The initial design phase established a pure event-driven blueprint mapped directly to Linux kernel interrupts.
 * * **Phase 2: Modular System Design (SOLID):** To satisfy the requirement for high maintainability and system stability, the architecture was explicitly decoupled. The Framebuffer GUI, ALSA Audio Engine, and Sensor Monitors were designed as isolated components that communicate exclusively via lock-free data structures.
 * * **Phase 3: Hardware-in-the-Loop Prototyping (TDD):** Theoretical designs were immediately tested against physical hardware constraints. Using Test-Driven Development directly on the Raspberry Pi, we continuously verified that our `std::atomic` RingBuffers successfully eliminated mutex bottlenecks under real-world acoustic loads.
 * * **Phase 4: Profiling & Iterative Optimization:** To rigorously meet the stringent `<15%` CPU utilization boundary, the system underwent continuous performance profiling. Thread priorities and evdev blocking states were empirically fine-tuned until the latency metrics perfectly aligned with our initial design specifications.
@@ -92,7 +92,15 @@ JiaNan Liu — Hardware Programmer / BSP & Driver Integration
 
 ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 
-## 8. Build and Run Instructions
+## 8. System Showcase & Conclusion 
+[Desktop Music Space Station Hardware Setup](assets/system_showcase.jpg) 
+*(Physical Prototype: Integrating C++17 execution, Framebuffer UI, ALSA audio via Marshall speaker, WS2812 RGB Strip, and DS18B20 thermal probe.)
+
+The **Desktop Music Space Station** represents the culmination of rigorous system design and low-level hardware optimization. As demonstrated in our physical prototype above, the theoretical architecture has been successfully realized into a functional, industrial-grade terminal. The system seamlessly orchestrates a custom ultra-low-latency Linux Framebuffer UI (center), a robust C++17 lock-free audio engine outputting to a Marshall speaker (right), and real-time hardware peripherals including a dynamically synced WS2812 RGB LED strip (top) and a DS18B20 thermal probe (foreground). 
+
+By strictly adhering to real-time embedded programming paradigms—such as zero-polling execution, lock-free concurrency, and deterministic hardware interrupts—we successfully bridged the gap between high-level software architecture and physical hardware constraints. This project not only fulfills the stringent requirements of the ENG 5220 curriculum but serves as a robust blueprint for developing latency-critical, interactive embedded systems. 
+
+## 9. Build and Run Instructions
 
 A `setup.sh` script is provided to configure the environment automatically. Execute the following commands in your Raspberry Pi terminal:
 
