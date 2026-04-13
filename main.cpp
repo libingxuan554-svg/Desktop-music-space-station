@@ -47,7 +47,7 @@ int main() {
     // 自动路由到蓝牙：AudioEngine 已重构，传入 "default" 即可
     if (engine.init("default", 44100)) {
         engine.start();
-        std::cout << "✅ ALSA Engine Started (Target: JBL Go 3)." << std::endl;
+        std::cout << "ALSA Engine Started (Target: JBL Go 3)." << std::endl;
     }
 
     std::vector<std::string> playlist;
@@ -174,7 +174,7 @@ int main() {
                 uint64_t missed;
                 read(timer_fd, &missed, sizeof(missed)); 
             }
-        } // <--- 🌟 修复点：正确闭合 while 循环
+        } // <---  修复点：正确闭合 while 循环
 
         if (timer_fd != -1) close(timer_fd);
     });
@@ -209,4 +209,4 @@ int main() {
     envMonitor.stop();
     return 0;
 }
-// <--- 🌟 修复点：删除了多余的花括号
+// <---  修复点：删除了多余的花括号
