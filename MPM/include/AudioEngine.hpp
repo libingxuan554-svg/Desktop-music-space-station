@@ -30,7 +30,14 @@ public:
  */
     AudioEngine(AudioSource* src, HardwareController* hw = nullptr);
     ~AudioEngine();
-
+    /**
+ * @brief Initializes the ALSA PCM hardware handle and sets hardware parameters.
+ * @param[in] device The ALSA hardware device name (e.g., "plughw:0,0").
+ * @param[in] sampleRate The target playback sample rate in Hz.
+ * @return True if hardware initialization succeeds, false otherwise.
+ * @note [Real-Time Constraints]:
+ * - Blocking Operation: Contains blocking hardware I/O setup. MUST be called during the system startup phase before the real-time playback thread is spawned.
+ */
     bool init(const char* device, unsigned int sampleRate);
     void start();
     void stop();
