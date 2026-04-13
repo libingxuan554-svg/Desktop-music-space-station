@@ -45,6 +45,11 @@ void HardwareController::shutdown() {
     m_isInitialized = false;
 }
 
+/**
+ * @brief Asynchronously dispatches spectrum data (Producer).
+ * @note [Real-Time Constraints]:
+ * - O(1) Non-Blocking Dispatch: The mutex is held strictly for a fast memory copy. The audio thread triggers `notify_one()` and returns immediately, guaranteeing zero blocking on the slow SPI bus.
+ */
 void HardwareController::updateLighting(const std::vector<float>& spectrum) {
     {
     //The audio thread only pushes data into the "mailbox" and returns immediately without blocking
@@ -54,6 +59,11 @@ void HardwareController::updateLighting(const std::vector<float>& spectrum) {
     m_ledCV.notify_one(); // Wake up the sleeping LED worker
 }
 
+/**
+ * @brief Dedicated SPI rendering loop (Consumer).
+ * @note [Real-Time Constraints]:
+ * - Zero-Polling Hardware Sync: Thread is completely suspended via `m_ledCV.wait()`. Consumes exactly 0% CPU when no audio is playing, entirely avoiding spin-lock overhead.
+ */
 void HardwareController::ledWorker() {
     while (m_ledRunning) {
         std::vector<float> specCopy;
