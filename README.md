@@ -93,7 +93,8 @@ JiaNan Liu — Hardware Programmer / BSP & Driver Integration
 ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 
 ## 8. System Showcase & Conclusion 
-[Desktop Music Space Station Hardware Setup](assets/system_showcase.jpg) 
+<img width="697" height="818" alt="image" src="https://github.com/user-attachments/assets/f5a00f56-5a8a-46cd-9a5a-1e881c332d13" />
+
 *(Physical Prototype: Integrating C++17 execution, Framebuffer UI, ALSA audio via Marshall speaker, WS2812 RGB Strip, and DS18B20 thermal probe.)
 
 The **Desktop Music Space Station** represents the culmination of rigorous system design and low-level hardware optimization. As demonstrated in our physical prototype above, the theoretical architecture has been successfully realized into a functional, industrial-grade terminal. The system seamlessly orchestrates a custom ultra-low-latency Linux Framebuffer UI (center), a robust C++17 lock-free audio engine outputting to a Marshall speaker (right), and real-time hardware peripherals including a dynamically synced WS2812 RGB LED strip (top) and a DS18B20 thermal probe (foreground). 
