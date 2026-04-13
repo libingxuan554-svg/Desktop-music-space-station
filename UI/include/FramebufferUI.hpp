@@ -70,7 +70,7 @@ public:
  * @note Real-Time Constraints:
  * Efficiency: use memcpy for efficient VRAM transfer.
  */                              
-    void flush(); // 双缓冲推送接口
+    void flush(); 
 /**
  * @brief Draw a full-screen BMP image.
  * @param[in] path:  BMP file path.
