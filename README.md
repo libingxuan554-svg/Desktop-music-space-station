@@ -74,10 +74,10 @@ The project is modularized to adhere to the Single Responsibility Principle:
 
 Our development lifecycle was strictly dictated by our core design requirements, ensuring every architectural decision served the ultimate goal of deterministic real-time performance. We adopted a phased, design-oriented approach:
 
-* * **Phase 1: Requirement Analysis & Blueprinting:** Driven by the strict requirements for glitch-free audio and a constant 30FPS UI, we categorically rejected traditional OS polling. The initial design phase established a pure event-driven blueprint mapped directly to Linux kernel interrupts.
-* * **Phase 2: Modular System Design (SOLID):** To satisfy the requirement for high maintainability and system stability, the architecture was explicitly decoupled. The Framebuffer GUI, ALSA Audio Engine, and Sensor Monitors were designed as isolated components that communicate exclusively via lock-free data structures.
-* * **Phase 3: Hardware-in-the-Loop Prototyping (TDD):** Theoretical designs were immediately tested against physical hardware constraints. Using Test-Driven Development directly on the Raspberry Pi, we continuously verified that our `std::atomic` RingBuffers successfully eliminated mutex bottlenecks under real-world acoustic loads.
-* * **Phase 4: Profiling & Iterative Optimization:** To rigorously meet the stringent `<15%` CPU utilization boundary, the system underwent continuous performance profiling. Thread priorities and evdev blocking states were empirically fine-tuned until the latency metrics perfectly aligned with our initial design specifications.
+* **Phase 1: Requirement Analysis & Blueprinting:** Driven by the strict requirements for glitch-free audio and a constant 30FPS UI, we categorically rejected traditional OS polling. The initial design phase established a pure event-driven blueprint mapped directly to Linux kernel interrupts.
+* **Phase 2: Modular System Design (SOLID):** To satisfy the requirement for high maintainability and system stability, the architecture was explicitly decoupled. The Framebuffer GUI, ALSA Audio Engine, and Sensor Monitors were designed as isolated components that communicate exclusively via lock-free data structures.
+* **Phase 3: Hardware-in-the-Loop Prototyping (TDD):** Theoretical designs were immediately tested against physical hardware constraints. Using Test-Driven Development directly on the Raspberry Pi, we continuously verified that our `std::atomic` RingBuffers successfully eliminated mutex bottlenecks under real-world acoustic loads.
+* **Phase 4: Profiling & Iterative Optimization:** To rigorously meet the stringent `<15%` CPU utilization boundary, the system underwent continuous performance profiling. Thread priorities and evdev blocking states were empirically fine-tuned until the latency metrics perfectly aligned with our initial design specifications.
 
 ## 7. Team 15 & Contributions
 This project was collaboratively engineered by Team 15:
