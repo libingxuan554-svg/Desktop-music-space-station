@@ -81,15 +81,15 @@ A `setup.sh` script is provided to configure the environment automatically. Exec
 git clone [https://github.com/libingxuan554-svg/Desktop-music-space-station.git]
 cd Desktop-music-space-station
 
-//2. Execute the environment configuration script (Installs dependencies and sets group permissions)
+#2. Execute the environment configuration script (Installs dependencies and sets group permissions)
 chmod +x setup.sh
 ./setup.sh
 
-//3. setup coding environment
+#3. setup coding environment
 ./setup.sh
 sudo systemctl stop lightdm
 
-//4. coding & run
+#4. coding & run
 cd ~/Desktop-music-space-station/build && rm -rf * && cmake .. && make MusicStation -j4
 export XDG_RUNTIME_DIR=/run/user/1000 && sudo -E ALSA_LOG_LEVEL=quiet PULSE_SERVER=unix:/run/user/1000/pulse/native ./MusicStation
 
