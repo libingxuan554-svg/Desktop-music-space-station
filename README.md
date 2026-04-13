@@ -3,7 +3,7 @@
 > **An Industrial-Grade Real-Time Embedded Audio Subsystem for Raspberry Pi.**
 > Engineered for **ENG 5220: Real Time Embedded Programming**, University of Glasgow.
 > 
-> Desktop Music Space Station is a high-performance, C++17-powered embedded music terminal. It integrates a deterministic lock-free audio decoding engine, an ultra-low latency Framebuffer GUI, and hardware-level environment monitoring. Designed with a strict Zero-Polling architecture, the system guarantees exact 30FPS UI rendering and glitch-free audio playback under rigorous real-time computing constraints.
+> This C++17-powered terminal is designed to operate under rigorous real-time computing constraints, guaranteeing glitch-free audio playback and a deterministic 30FPS UI rendering cycle. By integrating a lock-free audio decoding engine with a strict Zero-Polling architecture, the system eliminates common embedded bottlenecks like audio stutter and high CPU idling, ensuring that hardware resources are utilized with maximum efficiency and precision.
 
 ##  1. Core Architectural Highlights (Real-Time Compliance)
 
