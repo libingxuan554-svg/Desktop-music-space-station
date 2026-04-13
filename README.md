@@ -5,7 +5,13 @@
 > 
 > This C++17-powered terminal is designed to operate under rigorous real-time computing constraints, guaranteeing glitch-free audio playback and a deterministic 30FPS UI rendering cycle. By integrating a lock-free audio decoding engine with a strict Zero-Polling architecture, the system eliminates common embedded bottlenecks like audio stutter and high CPU idling, ensuring that hardware resources are utilized with maximum efficiency and precision.
 
-##  1. Core Architectural Highlights (Real-Time Compliance)
+## 1.Design Philosophy & Requirements
+At its core, the system is built upon the principle of Deterministic Real-Time Performance. Unlike traditional desktop applications that rely on heavy OS scheduling, this project minimizes jitter through a Zero-Polling & Event-Driven architecture. The design prioritizes:
+Real-Time Compliance: UI rendering is strictly gated by timerfd hardware interrupts to maintain a jitter-free 30Hz cycle.
+Resource Efficiency: CPU utilization is capped at 15% during peak operation by suspending threads until physical interrupts (evdev) occur.
+Data Integrity: A strict No-Polling policy ensures that system responsiveness does not degrade under high audio processing loads.
+
+## 2. Core Architectural Highlights (Real-Time Compliance)
 
 * **Zero Polling & Event-Driven Execution:**
   * The entire system operates with **the highest 15% CPU utilization**.
