@@ -44,10 +44,10 @@ int main() {
     EnvironmentMonitor envMonitor;
     envMonitor.start();
 
-    // 自动路由到蓝牙：AudioEngine 已重构，传入 "default" 即可
-    if (engine.init("default", 44100)) {
+    //
+    if (engine.init("plughw:0,0", 44100)) {
         engine.start();
-        std::cout << "ALSA Engine Started (Target: JBL Go 3)." << std::endl;
+        std::cout << "ALSA Engine Started." << std::endl;
     }
 
     std::vector<std::string> playlist;
