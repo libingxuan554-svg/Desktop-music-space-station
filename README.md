@@ -100,6 +100,8 @@ ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 The **Desktop Music Space Station** represents the culmination of rigorous system design and low-level hardware optimization. As demonstrated in our physical prototype above, the theoretical architecture has been successfully realized into a functional, industrial-grade terminal. The system seamlessly orchestrates a custom ultra-low-latency Linux Framebuffer UI (center), a robust C++17 lock-free audio engine outputting to a Marshall speaker (right), and real-time hardware peripherals including a dynamically synced WS2812 RGB LED strip (top) and a DS18B20 thermal probe (foreground). 
 
 By strictly adhering to real-time embedded programming paradigms—such as zero-polling execution, lock-free concurrency, and deterministic hardware interrupts—we successfully bridged the gap between high-level software architecture and physical hardware constraints. This project not only fulfills the stringent requirements of the ENG 5220 curriculum but serves as a robust blueprint for developing latency-critical, interactive embedded systems. 
+P.S: Here is the link to our promotional video on YOUTUBE
+https://youtu.be/YskrXZoFV6A
 
 ## 9. Build and Run Instructions
 
@@ -114,7 +116,7 @@ cd Desktop-music-space-station
 chmod +x setup.sh
 ./setup.sh
 
-#3. setup coding environment
+#3. setup coding environment&In addition, please turn on the 1-wire bus and SPI bus in the Settings
 ./setup.sh
 sudo systemctl stop lightdm
 
