@@ -6,8 +6,10 @@
 > This C++17-powered terminal is designed to operate under rigorous real-time computing constraints, guaranteeing glitch-free audio playback and a deterministic 30FPS UI rendering cycle. By integrating a lock-free audio decoding engine with a strict Zero-Polling architecture, the system eliminates common embedded bottlenecks like audio stutter and high CPU idling, ensuring that hardware resources are utilized with maximum efficiency and precision.
 >
 > P.S: Here is the link to our promotional video on YOUTUBE “I build a 'Music space station'".
+>
 > YOUTUBE
 > https://youtu.be/YskrXZoFV6A
+>
 > TIKTOK
 > https://www.tiktok.com/@kevinh3904/video/7630547512511843606?is_from_webapp=1&sender_device=pc
 > 
