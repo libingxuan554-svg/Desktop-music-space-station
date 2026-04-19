@@ -4,6 +4,8 @@
 > Engineered for **ENG 5220: Real Time Embedded Programming**, University of Glasgow.
 > 
 > This C++17-powered terminal is designed to operate under rigorous real-time computing constraints, guaranteeing glitch-free audio playback and a deterministic 30FPS UI rendering cycle. By integrating a lock-free audio decoding engine with a strict Zero-Polling architecture, the system eliminates common embedded bottlenecks like audio stutter and high CPU idling, ensuring that hardware resources are utilized with maximum efficiency and precision.
+> P.S: Here is the link to our promotional video on YOUTUBE
+https://youtu.be/YskrXZoFV6A
 > 
 > <img width="450" height="350" alt="image" src="https://github.com/user-attachments/assets/9db4cddf-4f23-42e4-8c53-6b281f544b31" />
 
@@ -100,8 +102,6 @@ ZiKai Ma — Hardware Programmer / BSP & Driver Integration
 The **Desktop Music Space Station** represents the culmination of rigorous system design and low-level hardware optimization. As demonstrated in our physical prototype above, the theoretical architecture has been successfully realized into a functional, industrial-grade terminal. The system seamlessly orchestrates a custom ultra-low-latency Linux Framebuffer UI (center), a robust C++17 lock-free audio engine outputting to a Marshall speaker (right), and real-time hardware peripherals including a dynamically synced WS2812 RGB LED strip (top) and a DS18B20 thermal probe (foreground). 
 
 By strictly adhering to real-time embedded programming paradigms—such as zero-polling execution, lock-free concurrency, and deterministic hardware interrupts—we successfully bridged the gap between high-level software architecture and physical hardware constraints. This project not only fulfills the stringent requirements of the ENG 5220 curriculum but serves as a robust blueprint for developing latency-critical, interactive embedded systems. 
-P.S: Here is the link to our promotional video on YOUTUBE
-https://youtu.be/YskrXZoFV6A
 
 ## 9. Build and Run Instructions
 
