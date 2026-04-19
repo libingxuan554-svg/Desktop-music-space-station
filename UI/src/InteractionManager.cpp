@@ -263,7 +263,7 @@ void InteractionManager::renderCurrentPage(FramebufferUI* ui) {
         UIRenderer::renderMultiBarEQ(ui, currentVisual.overallIntensity, 512, 330, 115); 
 		// Push overall intensity resolved by audio engine to bar analyzer
 
-        float prog = (currentStatus.totalDuration > 0) ? (float)currentStatus.currentPosition / currentStatus.totalDuration : 0.0f; // 避免除零异常计算播放百分比 | Avoid division by zero when calculating playback percentage
+        float prog = (currentStatus.totalDuration > 0) ? (float)currentStatus.currentPosition / currentStatus.totalDuration : 0.0f; // Avoid division by zero when calculating playback percentage
         UIRenderer::renderProgressBar(ui, prog, 250, 525, 680, 16); 
 		// Draw slender cyber timeline fill
 
