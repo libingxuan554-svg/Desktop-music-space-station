@@ -1,68 +1,56 @@
-#pragma once
-#include <string>
-#include <vector>
+#ifndef AUDIO_ENGINE_HPP
+#define AUDIO_ENGINE_HPP
+
+#include <alsa/asoundlib.h>
+#include <thread>
 #include <atomic>
-#include <mutex>
+#include <vector>
+#include "AudioSource.hpp"
 
-#include "RingBuffer.h"
-#include "miniaudio.h"
+// Forward declaration: there is a class named HardwareController defined elsewhere
+class HardwareController; 
 
+/**
+ * @class AudioEngine
+ * @brief Core ALSA audio playback engine managing the hardware audio buffer.
+ * @note [Architecture / SOLID]:
+ * - Single Responsibility Principle (SRP): Exclusively manages the ALSA hardware playback lifecycle. It delegates file parsing and decoding to external modules.
+ * - Dependency Inversion Principle (DIP): Depends entirely on the abstract `AudioSource` interface to fetch PCM data, completely decoupling it from specific file formats (e.g., WAV).
+ */
 class AudioEngine {
 public:
-    enum class PlaybackState {
-        Stopped,
-        Playing,
-        Paused
-    };
-
-    AudioEngine();
+    //Core fix: this constructor now accepts two parameters
+    //(the second parameter defaults to nullptr to avoid errors)
+     /**
+ * @brief Constructs the audio engine with injected dependencies.
+ * @param[in] src Pointer to the abstract audio source interface (provides PCM data).
+ * @param[in] hw Optional pointer to the hardware controller (e.g., for LED synchronization).
+ * @note [Real-Time Constraints]:
+ * - Initialization Phase: Executes outside the real-time audio loop. Employs Dependency Injection (DI) to avoid dynamic memory allocation or complex instantiations during runtime.
+ */
+    AudioEngine(AudioSource* src, HardwareController* hw = nullptr);
     ~AudioEngine();
-
-    bool init(ma_uint32 sampleRate = 48000,
-              ma_uint32 channels = 2,
-              ma_uint32 analysisWindowFrames = 2048,
-              size_t ringBufferSeconds = 2);
-
-    bool load(const std::string& file);
-    void play();
-    void pause();
+    /**
+ * @brief Initializes the ALSA PCM hardware handle and sets hardware parameters.
+ * @param[in] device The ALSA hardware device name (e.g., "plughw:0,0").
+ * @param[in] sampleRate The target playback sample rate in Hz.
+ * @return True if hardware initialization succeeds, false otherwise.
+ * @note [Real-Time Constraints]:
+ * - Blocking Operation: Contains blocking hardware I/O setup. MUST be called during the system startup phase before the real-time playback thread is spawned.
+ */
+    bool init(const char* device, unsigned int sampleRate);
+    void start();
     void stop();
-    void setVolume(float v);
-
-    float getVolume() const;
-    PlaybackState getState() const;
-    bool isLoaded() const;
-
-    // 返回最近一段 PCM 数据，长度 = analysisWindowFrames * channels
-    bool getPcmChunk(std::vector<float>& outChunk);
-
-    ma_uint32 getSampleRate() const;
-    ma_uint32 getChannels() const;
 
 private:
-    static void dataCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
-    void onAudioCallback(float* output, ma_uint32 frameCount);
-    void fillSilence(float* output, ma_uint32 frameCount);
+    void playbackWorker();
+    void recoverFromError(int err);
 
-private:
-    ma_device m_device{};
-    ma_decoder m_decoder{};
-
-    bool m_initialized = false;
-    bool m_decoderInitialized = false;
-
-    std::atomic<bool> m_deviceStarted{false};
-    std::atomic<bool> m_fileLoaded{false};
-    std::atomic<float> m_volume{1.0f};
-    std::atomic<PlaybackState> m_state{PlaybackState::Stopped};
-
-    std::mutex m_decoderMutex;
-
-    RingBuffer m_ringBuffer;
-
-    ma_uint32 m_sampleRate = 48000;
-    ma_uint32 m_channels = 2;
-    ma_uint32 m_analysisWindowFrames = 2048;
-
-    std::string m_currentFile;
+    AudioSource* source;
+    HardwareController* hwController; // Stores the reference to the hardware controller
+    snd_pcm_t* pcmHandle;
+    std::thread playbackThread;
+    std::atomic<bool> running;
 };
+
+#endif
