@@ -74,7 +74,7 @@ int main() {
     // 3. UI rendering pipeline and peripheral initialization
     // ==========================================
     UI::FramebufferUI fbUi("/dev/fb0"); // Mount Linux framebuffer device to gain direct VRAM write access
-    UI::TouchHandler touch("/dev/input/event0"); //  Mount Linux core input device to capture hardware interrupts
+    UI::TouchHandler touch("/dev/input/event5"); //  Mount Linux core input device to capture hardware interrupts
 
     // Extreme-speed pre-decompression: Load high-frequency full-screen UI wallpapers into memory dictionary in advance
     fbUi.preloadBmp("STANDBY", "../UI/Renfer/bg_standy_clean_1024x600.bmp");
